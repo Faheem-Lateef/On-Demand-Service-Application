@@ -23,12 +23,13 @@ function HomeStack() {
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#020617' },
-                headerTintColor: '#f1f5f9',
+                headerStyle: { backgroundColor: '#131022' },
+                headerTintColor: '#ffffff',
                 headerTitleStyle: { fontWeight: '700' },
+                headerShadowVisible: false,
             }}
         >
-            <Stack.Screen name="ServiceList" component={HomeScreen} options={{ title: 'Services' }} />
+            <Stack.Screen name="ServiceList" component={HomeScreen} options={{ headerShown: false }} />
             <Stack.Screen
                 name="BookService"
                 component={BookServiceScreen}
@@ -44,23 +45,29 @@ function MainTabs() {
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: '#0f172a',
-                    borderTopColor: '#1e293b',
+                    backgroundColor: '#131022',
+                    borderTopColor: 'rgba(255,255,255,0.05)',
                     borderTopWidth: 1,
-                    paddingBottom: 6,
-                    paddingTop: 6,
-                    height: 62,
+                    height: 70,
+                    paddingBottom: 12,
+                    paddingTop: 8,
                 },
-                tabBarActiveTintColor: '#3b82f6',
-                tabBarInactiveTintColor: '#475569',
-                tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginTop: 2 },
+                tabBarActiveTintColor: '#3713ec',
+                tabBarInactiveTintColor: '#94a3b8',
+                tabBarLabelStyle: {
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    marginTop: 4,
+                    textTransform: 'uppercase'
+                },
             }}
         >
             <Tab.Screen
                 name="Home"
                 component={HomeStack}
                 options={{
-                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏠</Text>,
+                    tabBarLabel: 'HOME',
+                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>🏠</Text>,
                 }}
             />
             <Tab.Screen
@@ -68,11 +75,13 @@ function MainTabs() {
                 component={BookingsScreen}
                 options={{
                     headerShown: true,
-                    headerStyle: { backgroundColor: '#020617' },
-                    headerTintColor: '#f1f5f9',
+                    headerStyle: { backgroundColor: '#131022' },
+                    headerTintColor: '#ffffff',
                     headerTitleStyle: { fontWeight: '700' },
-                    title: 'My Bookings',
-                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📅</Text>,
+                    headerShadowVisible: false,
+                    title: 'MY BOOKINGS',
+                    tabBarLabel: 'BOOKINGS',
+                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>📅</Text>,
                 }}
             />
             <Tab.Screen
@@ -80,11 +89,13 @@ function MainTabs() {
                 component={ProfileScreen}
                 options={{
                     headerShown: true,
-                    headerStyle: { backgroundColor: '#020617' },
-                    headerTintColor: '#f1f5f9',
+                    headerStyle: { backgroundColor: '#131022' },
+                    headerTintColor: '#ffffff',
                     headerTitleStyle: { fontWeight: '700' },
-                    title: 'My Profile',
-                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text>,
+                    headerShadowVisible: false,
+                    title: 'MY PROFILE',
+                    tabBarLabel: 'PROFILE',
+                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>👤</Text>,
                 }}
             />
         </Tab.Navigator>
