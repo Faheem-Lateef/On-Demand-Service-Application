@@ -195,7 +195,7 @@ export default function HomeScreen({ navigation }: any) {
                             <View style={styles.serviceInfo}>
                                 <Text style={styles.serviceName}>{service.name}</Text>
                                 <View style={styles.servicePrice}>
-                                    <Text style={styles.priceAmount}>${(service.price || 0).toFixed(2)}</Text>
+                                    <Text style={styles.priceAmount}>${Number(service.price || 0).toFixed(2)}</Text>
                                     <Text style={styles.priceUnit}> /hr</Text>
                                 </View>
                             </View>
