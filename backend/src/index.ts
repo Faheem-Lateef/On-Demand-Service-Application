@@ -7,6 +7,8 @@ import AppError from './utils/appError';
 // Routers
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import serviceRoutes from './routes/serviceRoutes';
+import bookingRoutes from './routes/bookingRoutes';
 
 dotenv.config();
 
@@ -20,6 +22,8 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/categories', serviceRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 app.get('/', (req: Request, res: Response) => {
     res.send('On-Demand Service API is running');
