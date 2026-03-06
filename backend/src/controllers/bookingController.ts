@@ -124,6 +124,15 @@ export const updateBookingStatus = asyncHandler(async (req: AuthRequest, res: Re
         }
     });
 
+    // SIMULATED PUSH NOTIFICATION (Bonus Feature)
+    // Send notification to the customer about the status change
+    const pushTitle = `Booking Status Update`;
+    const pushBody = `Your booking for "${updatedBooking.service.name}" has been marked as ${status}.`;
+
+    // We import locally here to avoid circular dependencies if any, or just import at the top. Let's import at top later, or just require it here for simplicity.
+    const { sendMockPushNotification } = require('../utils/pushNotifications');
+    sendMockPushNotification(updatedBooking.customerId, pushTitle, pushBody).catch(console.error);
+
     res.status(200).json({
         success: true,
         data: updatedBooking,
