@@ -38,3 +38,6 @@ Thumbs.db
 .expo/
 dist/
 web-build/
+ 
+# Checklists
+phase_*_checklist.md
