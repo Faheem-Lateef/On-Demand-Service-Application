@@ -37,3 +37,19 @@ export const getAllUsers = asyncHandler(async (req: AuthRequest, res: Response, 
         data: users,
     });
 });
+
+// @desc    Get all providers
+// @route   GET /api/users/providers
+// @access  Private (Any authenticated user)
+export const getProviders = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const providers = await prisma.user.findMany({
+        where: { role: 'PROVIDER' },
+        select: { id: true, name: true, email: true, createdAt: true },
+    });
+
+    res.status(200).json({
+        success: true,
+        results: providers.length,
+        data: providers,
+    });
+});
