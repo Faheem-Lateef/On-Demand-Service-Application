@@ -15,6 +15,8 @@ import HomeScreen from '../screens/main/HomeScreen';
 import BookingsScreen from '../screens/main/BookingsScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import BookServiceScreen from '../screens/main/BookServiceScreen';
+import ServiceDetailScreen from '../screens/main/ServiceDetailScreen';
+import ProviderDetailScreen from '../screens/main/ProviderDetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,17 +25,33 @@ function HomeStack() {
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#131022' },
+                headerStyle: { backgroundColor: '#0F0C20' },
                 headerTintColor: '#ffffff',
-                headerTitleStyle: { fontWeight: '700' },
+                headerTitleStyle: { fontWeight: '800' },
                 headerShadowVisible: false,
             }}
         >
             <Stack.Screen name="ServiceList" component={HomeScreen} options={{ headerShown: false }} />
             <Stack.Screen
+                name="ServiceDetail"
+                component={ServiceDetailScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
                 name="BookService"
                 component={BookServiceScreen}
-                options={({ route }: any) => ({ title: route.params?.service?.name || 'Book Service' })}
+                options={({ route }: any) => ({
+                    title: route.params?.service?.name || 'Book Service',
+                    headerStyle: { backgroundColor: '#0F0C20' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: '800' },
+                    headerShadowVisible: false
+                })}
+            />
+            <Stack.Screen
+                name="ProviderDetail"
+                component={ProviderDetailScreen}
+                options={{ headerShown: false }}
             />
         </Stack.Navigator>
     );
@@ -45,20 +63,22 @@ function MainTabs() {
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: '#131022',
-                    borderTopColor: 'rgba(255,255,255,0.05)',
+                    backgroundColor: '#16132B',
+                    borderTopColor: 'rgba(255,255,255,0.03)',
                     borderTopWidth: 1,
-                    height: 70,
-                    paddingBottom: 12,
-                    paddingTop: 8,
+                    height: 75,
+                    paddingBottom: 15,
+                    paddingTop: 10,
+                    elevation: 10,
                 },
-                tabBarActiveTintColor: '#3713ec',
-                tabBarInactiveTintColor: '#94a3b8',
+                tabBarActiveTintColor: '#7751FF',
+                tabBarInactiveTintColor: '#64748b',
                 tabBarLabelStyle: {
                     fontSize: 10,
-                    fontWeight: 'bold',
+                    fontWeight: '800',
                     marginTop: 4,
-                    textTransform: 'uppercase'
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
                 },
             }}
         >
@@ -75,9 +95,9 @@ function MainTabs() {
                 component={BookingsScreen}
                 options={{
                     headerShown: true,
-                    headerStyle: { backgroundColor: '#131022' },
+                    headerStyle: { backgroundColor: '#0F0C20' },
                     headerTintColor: '#ffffff',
-                    headerTitleStyle: { fontWeight: '700' },
+                    headerTitleStyle: { fontWeight: '800' },
                     headerShadowVisible: false,
                     title: 'MY BOOKINGS',
                     tabBarLabel: 'BOOKINGS',
@@ -89,9 +109,9 @@ function MainTabs() {
                 component={ProfileScreen}
                 options={{
                     headerShown: true,
-                    headerStyle: { backgroundColor: '#131022' },
+                    headerStyle: { backgroundColor: '#0F0C20' },
                     headerTintColor: '#ffffff',
-                    headerTitleStyle: { fontWeight: '700' },
+                    headerTitleStyle: { fontWeight: '800' },
                     headerShadowVisible: false,
                     title: 'MY PROFILE',
                     tabBarLabel: 'PROFILE',
