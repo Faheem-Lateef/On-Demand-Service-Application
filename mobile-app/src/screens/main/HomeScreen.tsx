@@ -46,7 +46,7 @@ const MOCK_PROVIDERS: Provider[] = [
         rating: 4.9,
         distance: '1.2 km away',
         hourlyRate: 35,
-        image: 'https://images.unsplash.com/photo-1570126128898-46c7048a00c1?q=80&w=100&auto=format&fit=crop'
+        image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100&auto=format&fit=crop'
     },
     {
         id: '2',
@@ -55,7 +55,7 @@ const MOCK_PROVIDERS: Provider[] = [
         rating: 4.7,
         distance: '2.5 km away',
         hourlyRate: 40,
-        image: 'https://images.unsplash.com/photo-1581578731522-5b17b8822eda?q=80&w=100&auto=format&fit=crop'
+        image: 'https://images.unsplash.com/photo-1520333789090-1afc82db536a?q=80&w=100&auto=format&fit=crop'
     }
 ];
 
@@ -81,8 +81,11 @@ export default function HomeScreen({ navigation }: any) {
             setCategories(data);
 
             // Extract all services for "Popular" section
-            const allServices = data.flatMap(c => c.services.map(s => ({
-                ...s,
+            const allServices: Service[] = data.flatMap(c => c.services.map(s => ({
+                id: s.id,
+                name: s.name,
+                description: s.description,
+                price: s.price,
                 rating: 4.5 + Math.random() * 0.5,
                 image: getServiceImage(s.name)
             })));
@@ -96,8 +99,16 @@ export default function HomeScreen({ navigation }: any) {
     };
 
     const getServiceImage = (name: string) => {
-        if (name.toLowerCase().includes('clean')) return 'https://images.unsplash.com/photo-1581578731522-5b17b8822eda?q=80&w=500&auto=format&fit=crop';
-        if (name.toLowerCase().includes('ac') || name.toLowerCase().includes('repair')) return 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=500&auto=format&fit=crop';
+        const lowerName = name.toLowerCase();
+        if (lowerName.includes('sofa')) return 'https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?q=80&w=500&auto=format&fit=crop';
+        if (lowerName.includes('deep') || lowerName.includes('home')) return 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=500&auto=format&fit=crop';
+        if (lowerName.includes('clean')) return 'https://images.unsplash.com/photo-1581578731522-5b17b8822eda?q=80&w=500&auto=format&fit=crop';
+        if (lowerName.includes('ac') || lowerName.includes('repair')) return 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=500&auto=format&fit=crop';
+        if (lowerName.includes('plumb')) return 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?q=80&w=500&auto=format&fit=crop';
+        if (lowerName.includes('electric')) return 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=500&auto=format&fit=crop';
+        if (lowerName.includes('paint')) return 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?q=80&w=500&auto=format&fit=crop';
+        if (lowerName.includes('garden') || lowerName.includes('lawn')) return 'https://images.unsplash.com/photo-1592424001809-8b01bb5dae2d?q=80&w=500&auto=format&fit=crop';
+        if (lowerName.includes('assemble') || lowerName.includes('furnitur')) return 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=500&auto=format&fit=crop';
         return 'https://images.unsplash.com/photo-1581578731522-5b17b8822eda?q=80&w=500&auto=format&fit=crop';
     }
 
@@ -119,22 +130,25 @@ export default function HomeScreen({ navigation }: any) {
             <StatusBar style="light" />
             <ScrollView
                 style={styles.container}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3713ec" />}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7751FF" />}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerLeft}>
-                        <Image
-                            source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=100&auto=format&fit=crop' }}
-                            style={styles.avatar}
-                        />
+                        <View style={styles.avatarContainer}>
+                            <Image
+                                source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=100&auto=format&fit=crop' }}
+                                style={styles.avatar}
+                            />
+                            <View style={styles.onlineStatus} />
+                        </View>
                         <View style={styles.headerText}>
-                            <Text style={styles.welcomeText}>Welcome back,</Text>
-                            <Text style={styles.userName}>Hello {user?.name?.split(' ')[0] || 'Faheem'}</Text>
+                            <Text style={styles.welcomeText}>Good morning ☀️</Text>
+                            <Text style={styles.userName}>{user?.name?.split(' ')[0] || 'Faheem'}</Text>
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.notificationBtn}>
+                    <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.8}>
                         <Text style={styles.notificationIcon}>🔔</Text>
                         <View style={styles.notificationDot} />
                     </TouchableOpacity>
@@ -146,12 +160,26 @@ export default function HomeScreen({ navigation }: any) {
                         <Text style={styles.searchIcon}>🔍</Text>
                         <TextInput
                             style={styles.searchInput}
-                            placeholder="Search for services (e.g. Cleaning)"
-                            placeholderTextColor="#64748b"
+                            placeholder="What do you need help with?"
+                            placeholderTextColor="#64748B"
                         />
-                        <TouchableOpacity style={styles.filterBtn}>
+                        <TouchableOpacity style={styles.filterBtn} activeOpacity={0.8}>
                             <Text style={styles.filterIcon}>🎛️</Text>
                         </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Promotional Banner */}
+                <View style={styles.bannerContainer}>
+                    <View style={styles.banner}>
+                        <View style={styles.bannerContent}>
+                            <Text style={styles.bannerTitle}>30% OFF</Text>
+                            <Text style={styles.bannerSub}>On all cleaning services</Text>
+                            <TouchableOpacity style={styles.bannerBtn} activeOpacity={0.9}>
+                                <Text style={styles.bannerBtnText}>Claim Now</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3223/3223066.png' }} style={styles.bannerImage} />
                     </View>
                 </View>
 
@@ -164,7 +192,7 @@ export default function HomeScreen({ navigation }: any) {
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catScroll}>
                     {categories.map((cat) => (
-                        <TouchableOpacity key={cat.id} style={styles.catItem}>
+                        <TouchableOpacity key={cat.id} style={styles.catItem} activeOpacity={0.8}>
                             <View style={styles.catIconBox}>
                                 <Text style={styles.catIconText}>{CATEGORY_ICONS[cat.name] || '✦'}</Text>
                             </View>
@@ -185,7 +213,8 @@ export default function HomeScreen({ navigation }: any) {
                         <TouchableOpacity
                             key={service.id}
                             style={styles.serviceCard}
-                            onPress={() => navigation.navigate('BookService', { service })}
+                            activeOpacity={0.9}
+                            onPress={() => navigation.navigate('ServiceDetail', { service })}
                         >
                             <Image source={{ uri: service.image }} style={styles.serviceImage} />
                             <View style={styles.ratingBadge}>
@@ -193,9 +222,9 @@ export default function HomeScreen({ navigation }: any) {
                                 <Text style={styles.ratingText}>{service.rating?.toFixed(1) || '4.5'}</Text>
                             </View>
                             <View style={styles.serviceInfo}>
-                                <Text style={styles.serviceName}>{service.name}</Text>
+                                <Text style={styles.serviceName} numberOfLines={1}>{service.name}</Text>
                                 <View style={styles.servicePrice}>
-                                    <Text style={styles.priceAmount}>${Number(service.price || 0).toFixed(2)}</Text>
+                                    <Text style={styles.priceAmount}>${Number(service.price || 0).toFixed(0)}</Text>
                                     <Text style={styles.priceUnit}> /hr</Text>
                                 </View>
                             </View>
@@ -205,22 +234,28 @@ export default function HomeScreen({ navigation }: any) {
 
                 {/* Recommended Providers */}
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Recommended Providers</Text>
+                    <Text style={styles.sectionTitle}>Top Providers</Text>
                 </View>
                 <View style={styles.providersList}>
                     {MOCK_PROVIDERS.map((provider) => (
-                        <TouchableOpacity key={provider.id} style={styles.providerCard}>
+                        <TouchableOpacity
+                            key={provider.id}
+                            style={styles.providerCard}
+                            activeOpacity={0.8}
+                            onPress={() => navigation.navigate('ProviderDetail', { provider })}
+                        >
                             <Image source={{ uri: provider.image }} style={styles.providerAvatar} />
                             <View style={styles.providerDetails}>
                                 <View style={styles.providerHeader}>
                                     <Text style={styles.providerName}>{provider.name}</Text>
-                                    <Text style={styles.providerPrice}>${provider.hourlyRate}/hr</Text>
+                                    <View style={styles.providerRatingBox}>
+                                        <Text style={styles.providerRatingText}>⭐ {provider.rating}</Text>
+                                    </View>
                                 </View>
-                                <Text style={styles.jobsDone}>{provider.jobsDone}+ completed jobs</Text>
+                                <Text style={styles.jobsDone}>{provider.jobsDone}+ jobs done</Text>
                                 <View style={styles.providerStats}>
-                                    <Text style={styles.providerRating}>⭐ {provider.rating}</Text>
-                                    <View style={styles.statDivider} />
-                                    <Text style={styles.providerDistance}>{provider.distance}</Text>
+                                    <Text style={styles.providerDistance}>📍 {provider.distance}</Text>
+                                    <Text style={styles.providerPrice}>${provider.hourlyRate}<Text style={styles.providerPriceUnit}>/hr</Text></Text>
                                 </View>
                             </View>
                         </TouchableOpacity>
@@ -234,116 +269,144 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: '#131022' },
+    safeArea: { flex: 1, backgroundColor: '#0F0C20' },
     container: { flex: 1 },
-    centered: { flex: 1, backgroundColor: '#131022', alignItems: 'center', justifyContent: 'center' },
-    loadingText: { color: '#94a3b8', marginTop: 12, fontSize: 14 },
+    centered: { flex: 1, backgroundColor: '#0F0C20', alignItems: 'center', justifyContent: 'center' },
+    loadingText: { color: '#94a3b8', marginTop: 12, fontSize: 15, fontWeight: '500' },
 
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: 24,
         paddingTop: 20,
-        paddingBottom: 15
+        paddingBottom: 20
     },
     headerLeft: { flexDirection: 'row', alignItems: 'center' },
-    avatar: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#3713ec' },
-    headerText: { marginLeft: 12 },
-    welcomeText: { color: '#94a3b8', fontSize: 14 },
-    userName: { color: '#ffffff', fontSize: 18, fontWeight: 'bold' },
-    notificationBtn: {
-        width: 44, height: 44, borderRadius: 22,
-        backgroundColor: '#1e1b32', alignItems: 'center', justifyContent: 'center',
-        position: 'relative'
+    avatarContainer: { position: 'relative' },
+    avatar: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: '#7751FF' },
+    onlineStatus: {
+        position: 'absolute', bottom: 2, right: 2,
+        width: 14, height: 14, borderRadius: 7,
+        backgroundColor: '#10B981', borderWidth: 2, borderColor: '#0F0C20'
     },
-    notificationIcon: { fontSize: 20 },
+    headerText: { marginLeft: 16 },
+    welcomeText: { color: '#94a3b8', fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+    userName: { color: '#ffffff', fontSize: 22, fontWeight: '800', marginTop: 2 },
+    notificationBtn: {
+        width: 48, height: 48, borderRadius: 24,
+        backgroundColor: '#16132B', alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)'
+    },
+    notificationIcon: { fontSize: 22 },
     notificationDot: {
         position: 'absolute', top: 12, right: 12,
-        width: 8, height: 8, borderRadius: 4,
-        backgroundColor: '#3713ec', borderWidth: 1, borderColor: '#131022'
+        width: 10, height: 10, borderRadius: 5,
+        backgroundColor: '#FF3B30', borderWidth: 2, borderColor: '#16132B'
     },
 
-    searchSection: { paddingHorizontal: 20, marginBottom: 25 },
+    searchSection: { paddingHorizontal: 24, marginBottom: 25 },
     searchBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#1e1b32',
-        borderRadius: 16,
-        paddingHorizontal: 15,
-        height: 56
+        backgroundColor: '#16132B',
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)'
     },
-    searchIcon: { fontSize: 18, color: '#64748b' },
-    searchInput: { flex: 1, color: '#ffffff', fontSize: 15, paddingHorizontal: 10 },
+    searchIcon: { fontSize: 20, color: '#64748b' },
+    searchInput: { flex: 1, color: '#ffffff', fontSize: 16, paddingHorizontal: 12, height: 50 },
     filterBtn: {
-        width: 36, height: 36, borderRadius: 10,
-        backgroundColor: '#3713ec', alignItems: 'center', justifyContent: 'center'
+        width: 44, height: 44, borderRadius: 14,
+        backgroundColor: '#7751FF', alignItems: 'center', justifyContent: 'center',
+        shadowColor: '#7751FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5
     },
-    filterIcon: { fontSize: 16, color: '#ffffff' },
+    filterIcon: { fontSize: 18, color: '#ffffff' },
+
+    bannerContainer: { paddingHorizontal: 24, marginBottom: 30 },
+    banner: {
+        flexDirection: 'row',
+        backgroundColor: '#7751FF',
+        borderRadius: 24,
+        padding: 24,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'relative',
+        overflow: 'hidden'
+    },
+    bannerContent: { zIndex: 1 },
+    bannerTitle: { color: '#FFFFFF', fontSize: 28, fontWeight: '900', marginBottom: 6 },
+    bannerSub: { color: '#E2D8FF', fontSize: 14, fontWeight: '500', marginBottom: 16 },
+    bannerBtn: { backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, alignSelf: 'flex-start' },
+    bannerBtnText: { color: '#7751FF', fontSize: 14, fontWeight: 'bold' },
+    bannerImage: { position: 'absolute', right: -20, bottom: -20, width: 140, height: 140, opacity: 0.9, transform: [{ rotate: '-10deg' }] },
 
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        marginBottom: 15
+        alignItems: 'baseline',
+        paddingHorizontal: 24,
+        marginBottom: 16
     },
-    sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: 'bold' },
-    seeAll: { color: '#3713ec', fontSize: 14, fontWeight: '600' },
+    sectionTitle: { color: '#ffffff', fontSize: 20, fontWeight: '800' },
+    seeAll: { color: '#7751FF', fontSize: 14, fontWeight: '700' },
 
-    catScroll: { paddingLeft: 20, paddingRight: 10, marginBottom: 30 },
-    catItem: { alignItems: 'center', marginRight: 20 },
+    catScroll: { paddingLeft: 24, paddingRight: 10, marginBottom: 35 },
+    catItem: { alignItems: 'center', marginRight: 22 },
     catIconBox: {
-        width: 68, height: 68, borderRadius: 20,
-        backgroundColor: '#1e1b32', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 10
+        width: 72, height: 72, borderRadius: 24,
+        backgroundColor: '#16132B', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 12,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)'
     },
-    catIconText: { fontSize: 28 },
-    catLabel: { color: '#ffffff', fontSize: 13, fontWeight: '500' },
+    catIconText: { fontSize: 32 },
+    catLabel: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
 
-    popularScroll: { paddingLeft: 20, paddingRight: 10, marginBottom: 30 },
+    popularScroll: { paddingLeft: 24, paddingRight: 10, marginBottom: 35 },
     serviceCard: {
-        width: width * 0.45,
-        backgroundColor: '#1e1b32',
-        borderRadius: 24,
-        marginRight: 15,
-        overflow: 'hidden',
-        position: 'relative'
+        width: width * 0.55,
+        backgroundColor: '#16132B',
+        borderRadius: 28,
+        marginRight: 18,
+        padding: 12,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)'
     },
-    serviceImage: { width: '100%', height: 120 },
+    serviceImage: { width: '100%', height: 140, borderRadius: 20 },
     ratingBadge: {
-        position: 'absolute', top: 10, right: 10,
+        position: 'absolute', top: 22, right: 22,
         flexDirection: 'row', alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        paddingHorizontal: 8, paddingVertical: 4,
-        borderRadius: 10
+        backgroundColor: 'rgba(15, 12, 32, 0.7)',
+        paddingHorizontal: 10, paddingVertical: 6,
+        borderRadius: 14
     },
-    starIcon: { fontSize: 10, marginRight: 3 },
-    ratingText: { color: '#ffffff', fontSize: 11, fontWeight: 'bold' },
-    serviceInfo: { padding: 15 },
-    serviceName: { color: '#ffffff', fontSize: 15, fontWeight: 'bold', marginBottom: 5 },
+    starIcon: { fontSize: 12, marginRight: 4 },
+    ratingText: { color: '#ffffff', fontSize: 12, fontWeight: 'bold' },
+    serviceInfo: { paddingTop: 16, paddingHorizontal: 8, paddingBottom: 8 },
+    serviceName: { color: '#ffffff', fontSize: 17, fontWeight: '800', marginBottom: 8 },
     servicePrice: { flexDirection: 'row', alignItems: 'baseline' },
-    priceAmount: { color: '#3713ec', fontSize: 16, fontWeight: 'bold' },
-    priceUnit: { color: '#64748b', fontSize: 12 },
+    priceAmount: { color: '#7751FF', fontSize: 20, fontWeight: '900' },
+    priceUnit: { color: '#64748B', fontSize: 14, fontWeight: '600' },
 
-    providersList: { paddingHorizontal: 20 },
+    providersList: { paddingHorizontal: 24 },
     providerCard: {
         flexDirection: 'row',
-        backgroundColor: '#1e1b32',
-        borderRadius: 20,
-        padding: 15,
-        marginBottom: 15,
+        backgroundColor: '#16132B',
+        borderRadius: 24,
+        padding: 16,
+        marginBottom: 16,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)'
+        borderColor: 'rgba(255,255,255,0.03)'
     },
-    providerAvatar: { width: 64, height: 64, borderRadius: 16 },
-    providerDetails: { flex: 1, marginLeft: 15 },
-    providerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-    providerName: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
-    providerPrice: { color: '#3713ec', fontSize: 15, fontWeight: 'bold' },
-    jobsDone: { color: '#94a3b8', fontSize: 13, marginBottom: 6 },
-    providerStats: { flexDirection: 'row', alignItems: 'center' },
-    providerRating: { color: '#ffffff', fontSize: 12, fontWeight: 'bold' },
-    statDivider: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: '#64748b', marginHorizontal: 8 },
-    providerDistance: { color: '#64748b', fontSize: 12 },
+    providerAvatar: { width: 70, height: 70, borderRadius: 20 },
+    providerDetails: { flex: 1, marginLeft: 16, justifyContent: 'center' },
+    providerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+    providerName: { color: '#ffffff', fontSize: 17, fontWeight: '800' },
+    providerRatingBox: { backgroundColor: 'rgba(119, 81, 255, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+    providerRatingText: { color: '#7751FF', fontSize: 12, fontWeight: '800' },
+    jobsDone: { color: '#94a3b8', fontSize: 13, marginBottom: 10, fontWeight: '500' },
+    providerStats: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    providerDistance: { color: '#64748b', fontSize: 13, fontWeight: '600' },
+    providerPrice: { color: '#ffffff', fontSize: 17, fontWeight: '900' },
+    providerPriceUnit: { color: '#64748b', fontSize: 12, fontWeight: '500' }
 });
