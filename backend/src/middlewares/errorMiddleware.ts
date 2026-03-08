@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
+import { Prisma } from '@prisma/client';
 import AppError from '../utils/appError';
 
 export const errorHandler = (
-    err: AppError | Error,
+    err: AppError | Error | any,
     req: Request,
     res: Response,
     next: NextFunction
@@ -15,8 +16,28 @@ export const errorHandler = (
         statusCode = err.statusCode;
         status = err.status;
         message = err.message;
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        // Handle specific Prisma database errors
+        if (err.code === 'P2002') {
+            statusCode = 409;
+            status = 'fail';
+            const target = (err.meta?.target as string[])?.join(', ') || 'field';
+            message = `Unique constraint failed on ${target}. This record already exists.`;
+        } else if (err.code === 'P2025') {
+            statusCode = 404;
+            status = 'fail';
+            message = 'Record not found to complete this operation.';
+        } else if (err.code === 'P2003') {
+            statusCode = 400;
+            status = 'fail';
+            message = 'Foreign key constraint failed. Related record does not exist.';
+        } else {
+            statusCode = 400;
+            status = 'fail';
+            message = `Database query error: ${err.message}`;
+        }
     } else {
-        // If it's a generic error (e.g. database unhandled fail, syntax error)
+        // If it's a generic unhandled error
         if (process.env.NODE_ENV === 'development') {
             message = err.message;
         }
