@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { StatusBar } from 'expo-status-bar';
 import api from '../../lib/api';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const { width } = Dimensions.get('window');
 
@@ -24,6 +25,7 @@ export default function ProviderHomeScreen({ navigation }: any) {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [actionLoading, setActionLoading] = useState<string | null>(null); // bookingId being actioned
+    const { unreadCount } = useNotifications();
 
     const fetchData = useCallback(async () => {
         try {
@@ -116,13 +118,20 @@ export default function ProviderHomeScreen({ navigation }: any) {
                         <Text style={styles.welcomeText}>Provider Dashboard ⚡</Text>
                         <Text style={styles.userName}>Hello, {user?.name?.split(' ')[0] || 'Pro'}</Text>
                     </View>
-                    <View style={styles.profileBtn}>
+                    <TouchableOpacity
+                        style={styles.profileBtn}
+                        onPress={() => navigation.navigate('Notifications')}
+                    >
                         <Image
                             source={{ uri: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=100&auto=format&fit=crop' }}
                             style={styles.avatar}
                         />
-                        <View style={styles.onlineStatus} />
-                    </View>
+                        {unreadCount > 0 ? (
+                            <View style={[styles.onlineStatus, { backgroundColor: '#EF4444' }]} />
+                        ) : (
+                            <View style={styles.onlineStatus} />
+                        )}
+                    </TouchableOpacity>
                 </View>
 
                 {/* Stats Grid */}
@@ -137,7 +146,7 @@ export default function ProviderHomeScreen({ navigation }: any) {
                 <View style={styles.actionsGrid}>
                     <QuickAction icon="📅" title="Bookings" color="#7751FF" onPress={() => navigation.navigate('Bookings')} />
                     <QuickAction icon="👤" title="Profile" color="#6366F1" onPress={() => navigation.navigate('Profile')} />
-                    <QuickAction icon="🔔" title="Alerts" color="#10B981" onPress={() => { }} />
+                    <QuickAction icon="🔔" title="Alerts" color="#10B981" onPress={() => navigation.navigate('Notifications')} />
                     <QuickAction icon="💬" title="Messages" color="#3B82F6" onPress={() => { }} />
                 </View>
 
