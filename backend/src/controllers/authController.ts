@@ -1,12 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import asyncHandler from 'express-async-handler';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import prisma from '../utils/prisma';
 import AppError from '../utils/appError';
+import { AuthService } from '../services/authService';
+import { UserService } from '../services/userService';
 
 const signToken = (id: string, role: string) => {
     return jwt.sign({ id, role }, process.env.JWT_SECRET as string, {
+        expiresIn: '15m',
+    });
+};
+
+const signRefreshToken = (id: string, role: string) => {
+    return jwt.sign({ id, role }, (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh'), {
         expiresIn: '7d',
     });
 };
@@ -15,44 +21,15 @@ const signToken = (id: string, role: string) => {
 // @route   POST /api/auth/register
 // @access  Public
 export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, password, role } = req.body;
+    const user = await AuthService.registerUser(req.body);
 
-    if (!name || !email || !password) {
-        return next(new AppError('Please provide name, email, and password', 400));
-    }
-
-    // Prevent users from making themselves ADMIN during open registration
-    const assignedRole = role === 'PROVIDER' ? 'PROVIDER' : 'CUSTOMER';
-
-    // Check if user exists
-    const userExists = await prisma.user.findUnique({
-        where: { email },
-    });
-
-    if (userExists) {
-        return next(new AppError('Email already in use', 400));
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const user = await prisma.user.create({
-        data: {
-            name,
-            email,
-            password: hashedPassword,
-            role: assignedRole,
-        },
-        select: { id: true, name: true, email: true, role: true }, // Exclude password from response
-    });
-
-    // Generate JWT token
+    // Generate JWT tokens
     const token = signToken(user.id, user.role);
+    const refreshToken = signRefreshToken(user.id, user.role);
 
     res.status(201).json({
         success: true,
-        data: { user, token },
+        data: { user, token, refreshToken },
     });
 });
 
@@ -60,34 +37,47 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
 // @route   POST /api/auth/login
 // @access  Public
 export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
+    const user = await AuthService.loginUser(req.body);
 
-    if (!email || !password) {
-        return next(new AppError('Please provide email and password', 400));
-    }
-
-    // Find user
-    const user = await prisma.user.findUnique({
-        where: { email },
-    });
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        return next(new AppError('Incorrect email or password', 401));
-    }
-
-    // Generate JWT token
+    // Generate JWT tokens
     const token = signToken(user.id, user.role);
+    const refreshToken = signRefreshToken(user.id, user.role);
 
     res.status(200).json({
         success: true,
         data: {
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-            },
+            user,
             token,
+            refreshToken
         },
     });
+});
+
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh
+// @access  Public
+export const refreshAccessToken = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return next(new AppError('Refresh token is required', 400));
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh')) as { id: string, role: string };
+
+        // Ensure user still exists in DB
+        const user = await UserService.getUserById(decoded.id);
+
+        const newAccessToken = signToken(user.id, user.role);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                token: newAccessToken
+            }
+        });
+    } catch (error) {
+        return next(new AppError('Invalid or expired refresh token', 401));
+    }
 });
