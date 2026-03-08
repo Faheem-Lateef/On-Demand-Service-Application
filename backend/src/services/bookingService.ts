@@ -1,0 +1,145 @@
+import prisma from '../utils/prisma';
+import AppError from '../utils/appError';
+import { BookingStatus } from '@prisma/client';
+
+export class BookingService {
+    static async createBooking(data: { customerId: string, serviceId: string, scheduledTime: string, address: string, notes?: string, providerId?: string }) {
+        const { customerId, serviceId, scheduledTime, address, notes, providerId } = data;
+        const bookingDate = new Date(scheduledTime);
+
+        if (bookingDate <= new Date()) {
+            throw new AppError('Scheduled time must be in the future', 400);
+        }
+
+        const service = await prisma.service.findUnique({ where: { id: serviceId } });
+        if (!service) {
+            throw new AppError('Service not found', 404);
+        }
+
+        if (providerId) {
+            const provider = await prisma.user.findUnique({
+                where: { id: providerId },
+                select: { role: true }
+            });
+            if (!provider || provider.role !== 'PROVIDER') {
+                throw new AppError('Invalid provider selected', 400);
+            }
+        }
+
+        const booking = await prisma.booking.create({
+            data: {
+                customerId,
+                serviceId,
+                providerId: providerId || null,
+                scheduledAt: bookingDate,
+                address,
+                notes,
+                totalAmount: service.price,
+                status: BookingStatus.PENDING,
+            },
+            include: {
+                service: { include: { category: true } },
+                customer: { select: { id: true, name: true } },
+            }
+        });
+
+        return booking;
+    }
+
+    static async getMyBookings(userId: string, role: string) {
+        let query: any = {};
+
+        if (role === 'CUSTOMER') {
+            query.customerId = userId;
+        } else if (role === 'PROVIDER') {
+            query = {
+                OR: [
+                    { providerId: userId },
+                    { providerId: null, status: BookingStatus.PENDING }
+                ]
+            };
+        }
+
+        const bookings = await prisma.booking.findMany({
+            where: query,
+            include: {
+                customer: { select: { id: true, name: true, email: true } },
+                service: { include: { category: true } },
+            },
+            orderBy: { scheduledAt: 'asc' }
+        });
+
+        return bookings;
+    }
+
+    static async updateBookingStatus(id: string, status: string) {
+        if (!Object.values(BookingStatus).includes(status as any)) {
+            throw new AppError('Invalid booking status', 400);
+        }
+
+        const booking = await prisma.booking.findUnique({ where: { id } });
+        if (!booking) {
+            throw new AppError('Booking not found', 404);
+        }
+
+        const updatedBooking = await prisma.booking.update({
+            where: { id },
+            data: { status: status as BookingStatus },
+            include: {
+                customer: { select: { id: true, name: true, email: true } },
+                service: true
+            }
+        });
+
+        const { sendMockPushNotification } = require('../utils/pushNotifications');
+        const pushBody = `Your booking for "${updatedBooking.service.name}" has been marked as ${status}.`;
+        sendMockPushNotification(updatedBooking.customerId, 'Booking Status Update', pushBody).catch(console.error);
+
+        return updatedBooking;
+    }
+
+    static async acceptBooking(id: string, providerId: string) {
+        const booking = await prisma.booking.findUnique({ where: { id } });
+        if (!booking) {
+            throw new AppError('Booking not found', 404);
+        }
+        if (booking.status !== BookingStatus.PENDING) {
+            throw new AppError('Only PENDING bookings can be accepted', 400);
+        }
+
+        const updatedBooking = await prisma.booking.update({
+            where: { id },
+            data: {
+                status: BookingStatus.ACCEPTED,
+                providerId,
+            },
+            include: {
+                customer: { select: { id: true, name: true, email: true } },
+                service: { include: { category: true } },
+            }
+        });
+
+        return updatedBooking;
+    }
+
+    static async rejectBooking(id: string) {
+        const booking = await prisma.booking.findUnique({ where: { id } });
+        if (!booking) {
+            throw new AppError('Booking not found', 404);
+        }
+        if (booking.status !== BookingStatus.PENDING && booking.status !== BookingStatus.ACCEPTED) {
+            throw new AppError('This booking cannot be rejected in its current state', 400);
+        }
+
+        const updatedBooking = await prisma.booking.update({
+            where: { id },
+            data: { status: BookingStatus.REJECTED },
+            include: {
+                customer: { select: { id: true, name: true, email: true } },
+                service: { include: { category: true } },
+            }
+        });
+
+        return updatedBooking;
+    }
+}
