@@ -21,12 +21,14 @@ interface User {
     email: string;
     role: string;
     createdAt: string;
+    providerStatus?: string;
 }
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<'ALL' | 'CUSTOMER' | 'PROVIDER' | 'ADMIN'>('ALL');
 
     const fetchUsers = async () => {
         try {
@@ -43,17 +45,25 @@ export default function UsersPage() {
         fetchUsers();
     }, []);
 
-    const filteredUsers = users.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesTab = activeTab === 'ALL' || user.role === activeTab;
+        return matchesSearch && matchesTab;
+    });
 
-    const getRoleBadge = (role: string) => {
+    const getRoleBadge = (role: string, status?: string) => {
         switch (role) {
             case 'ADMIN':
                 return <span className="px-3 py-1 bg-red-500/10 text-red-500 text-xs font-bold rounded-full flex items-center w-fit"><ShieldCheck className="w-3 h-3 mr-1" /> ADMIN</span>;
             case 'PROVIDER':
-                return <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-xs font-bold rounded-full flex items-center w-fit"><HardHat className="w-3 h-3 mr-1" /> PROVIDER</span>;
+                if (status === 'PENDING') {
+                    return <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-xs font-bold rounded-full flex items-center w-fit"><HardHat className="w-3 h-3 mr-1" /> PROVIDER (PENDING)</span>;
+                }
+                if (status === 'REJECTED') {
+                    return <span className="px-3 py-1 bg-red-500/10 text-red-500 text-xs font-bold rounded-full flex items-center w-fit"><HardHat className="w-3 h-3 mr-1" /> PROVIDER (REJECTED)</span>;
+                }
+                return <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 text-xs font-bold rounded-full flex items-center w-fit"><HardHat className="w-3 h-3 mr-1" /> PROVIDER</span>;
             default:
                 return <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-xs font-bold rounded-full flex items-center w-fit"><UserIcon className="w-3 h-3 mr-1" /> CUSTOMER</span>;
         }
@@ -84,6 +94,21 @@ export default function UsersPage() {
                         <Filter className="w-5 h-5" />
                     </button>
                 </div>
+            </div>
+
+            {/* Tabs Row */}
+            <div className="flex items-center space-x-2 border-b border-slate-800 pb-px">
+                {(['ALL', 'CUSTOMER', 'PROVIDER', 'ADMIN'] as const).map((tab) => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-4 py-2 text-sm font-semibold rounded-t-lg transition-all ${activeTab === tab
+                            ? 'bg-blue-600/10 text-blue-400 border-b-2 border-blue-500'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
+                    >
+                        {tab === 'ALL' ? 'All Users' : `${tab.charAt(0) + tab.slice(1).toLowerCase()}s`}
+                    </button>
+                ))}
             </div>
 
             <div className="bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden">
@@ -121,7 +146,7 @@ export default function UsersPage() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
-                                                {getRoleBadge(user.role)}
+                                                {getRoleBadge(user.role, user.providerStatus)}
                                             </td>
                                             <td className="px-8 py-5 text-slate-400 text-sm">
                                                 {new Date(user.createdAt).toLocaleDateString(undefined, {

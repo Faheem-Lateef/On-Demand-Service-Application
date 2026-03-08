@@ -30,6 +30,7 @@ export class AuthService {
                 password: hashedPassword,
                 role: assignedRole,
                 categoryId: assignedRole === 'PROVIDER' ? categoryId : null,
+                providerStatus: assignedRole === 'PROVIDER' ? 'PENDING' : null,
             },
             select: {
                 id: true,
@@ -37,6 +38,7 @@ export class AuthService {
                 email: true,
                 role: true,
                 categoryId: true,
+                providerStatus: true,
                 category: { select: { id: true, name: true } }
             },
         });

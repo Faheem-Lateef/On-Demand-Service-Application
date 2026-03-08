@@ -10,13 +10,15 @@ import {
     Calendar,
     LogOut,
     Briefcase,
-    ChevronRight
+    ChevronRight,
+    AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
+    { name: 'Approvals', icon: AlertCircle, href: '/approvals' },
     { name: 'Users', icon: Users, href: '/users' },
     { name: 'Services', icon: Briefcase, href: '/services' },
     { name: 'Bookings', icon: Calendar, href: '/bookings' },

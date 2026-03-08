@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, ActivityIndicator, KeyboardAvoidingView,
-    Platform, ScrollView, Alert,
+    Platform, ScrollView, Alert, Modal, FlatList
 } from 'react-native';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
@@ -20,13 +20,22 @@ export default function RegisterScreen({ navigation }: any) {
     const [isLoading, setIsLoading] = useState(false);
     const [categories, setCategories] = useState<CategoryOption[]>([]);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const [dropdownVisible, setDropdownVisible] = useState(false);
     const { login } = useAuth();
 
     // Fetch categories when user picks PROVIDER
     useEffect(() => {
         if (role === 'PROVIDER') {
             api.get('/categories').then(res => {
-                setCategories(res.data.data);
+                let fetchedCats: CategoryOption[] = res.data.data;
+                // Ensure 'Other' is strictly at the bottom
+                const otherCat = fetchedCats.find(c => c.name.toLowerCase() === 'other');
+                const restCats = fetchedCats.filter(c => c.name.toLowerCase() !== 'other');
+                if (otherCat) {
+                    setCategories([...restCats, otherCat]);
+                } else {
+                    setCategories(fetchedCats);
+                }
             }).catch(() => { });
         } else {
             setSelectedCategoryId(null);
@@ -57,7 +66,14 @@ export default function RegisterScreen({ navigation }: any) {
                 categoryId: role === 'PROVIDER' ? selectedCategoryId : undefined,
             });
             const { user, token } = response.data.data;
-            await login(user, token);
+
+            if (role === 'PROVIDER') {
+                Alert.alert('Application Submitted', 'Your provider account has been submitted to the admin for review. Once approved, you will appear in customer searches.', [
+                    { text: 'OK', onPress: () => login(user, token) }
+                ]);
+            } else {
+                await login(user, token);
+            }
         } catch (error: any) {
             Alert.alert('Registration Failed', error.response?.data?.message || 'Something went wrong.');
         } finally {
@@ -110,26 +126,18 @@ export default function RegisterScreen({ navigation }: any) {
                         </View>
                     </View>
 
-                    {/* Category Selection for Providers */}
+                    {/* Category Selection for Providers (Dropdown) */}
                     {role === 'PROVIDER' && categories.length > 0 && (
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>CATEGORY OF EXPERTISE *</Text>
-                            <View style={styles.serviceGrid}>
-                                {categories.map(c => {
-                                    const selected = selectedCategoryId === c.id;
-                                    return (
-                                        <TouchableOpacity
-                                            key={c.id}
-                                            style={[styles.serviceChip, selected && styles.serviceChipActive]}
-                                            onPress={() => setSelectedCategoryId(c.id)}
-                                        >
-                                            <Text style={[styles.serviceChipText, selected && styles.serviceChipTextActive]}>
-                                                {c.name}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
+                            <TouchableOpacity
+                                style={styles.input}
+                                onPress={() => setDropdownVisible(true)}
+                            >
+                                <Text style={{ color: selectedCategoryId ? '#f1f5f9' : '#475569', fontSize: 15 }}>
+                                    {selectedCategoryId ? categories.find(c => c.id === selectedCategoryId)?.name : 'Select a Category...'}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     )}
 
@@ -146,6 +154,43 @@ export default function RegisterScreen({ navigation }: any) {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+
+            {/* Dropdown Modal for Category Selection */}
+            <Modal
+                transparent={true}
+                visible={dropdownVisible}
+                animationType="fade"
+                onRequestClose={() => setDropdownVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setDropdownVisible(false)}
+                >
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Select Category</Text>
+                        <FlatList
+                            data={categories}
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={styles.modalOption}
+                                    onPress={() => {
+                                        setSelectedCategoryId(item.id);
+                                        setDropdownVisible(false);
+                                    }}
+                                >
+                                    <Text style={[
+                                        styles.modalOptionText,
+                                        selectedCategoryId === item.id && styles.modalOptionTextActive
+                                    ]}>{item.name}</Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
         </KeyboardAvoidingView>
     );
 }
@@ -193,4 +238,19 @@ const styles = StyleSheet.create({
     linkRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
     linkText: { color: '#64748b', fontSize: 14 },
     link: { color: '#7751FF', fontSize: 14, fontWeight: '600' },
+
+    // Modal Styles
+    modalOverlay: {
+        flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center', alignItems: 'center',
+    },
+    modalContent: {
+        width: '85%', backgroundColor: '#0f172a',
+        borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#1e293b',
+        maxHeight: '60%',
+    },
+    modalTitle: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
+    modalOption: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+    modalOptionText: { color: '#cbd5e1', fontSize: 16, textAlign: 'center' },
+    modalOptionTextActive: { color: '#7751FF', fontWeight: 'bold' }
 });

@@ -65,3 +65,40 @@ export const getProviderBookings = asyncHandler(async (req: AuthRequest, res: Re
     });
 });
 
+// @desc    Get all pending providers (for admin review)
+// @route   GET /api/users/providers/pending?page=1&limit=20
+// @access  Private (Admin only)
+export const getPendingProviders = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const pagination = getPagination(req.query);
+    const { data, total } = await UserService.getPendingProviders(pagination);
+    res.status(200).json({
+        success: true,
+        results: data.length,
+        total,
+        page: pagination.page,
+        limit: pagination.limit,
+        data,
+    });
+});
+
+// @desc    Approve a provider
+// @route   PATCH /api/users/providers/:id/approve
+// @access  Private (Admin only)
+export const approveProvider = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const user = await UserService.updateProviderStatus(req.params.id as string, 'APPROVED');
+    res.status(200).json({
+        success: true,
+        data: user,
+    });
+});
+
+// @desc    Reject a provider
+// @route   PATCH /api/users/providers/:id/reject
+// @access  Private (Admin only)
+export const rejectProvider = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const user = await UserService.updateProviderStatus(req.params.id as string, 'REJECTED');
+    res.status(200).json({
+        success: true,
+        data: user,
+    });
+});

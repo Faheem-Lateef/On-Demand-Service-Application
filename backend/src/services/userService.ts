@@ -35,7 +35,7 @@ export class UserService {
             prisma.user.findMany({
                 skip,
                 take: limit,
-                select: { id: true, name: true, email: true, role: true, createdAt: true },
+                select: { id: true, name: true, email: true, role: true, createdAt: true, providerStatus: true },
             }),
             prisma.user.count(),
         ]);
@@ -48,7 +48,7 @@ export class UserService {
 
         const [data, total] = await prisma.$transaction([
             prisma.user.findMany({
-                where: { role: 'PROVIDER' },
+                where: { role: 'PROVIDER', providerStatus: 'APPROVED' },
                 skip,
                 take: limit,
                 select: {
@@ -71,10 +71,55 @@ export class UserService {
                     }
                 },
             }),
-            prisma.user.count({ where: { role: 'PROVIDER' } }),
+            prisma.user.count({ where: { role: 'PROVIDER', providerStatus: 'APPROVED' } }),
         ]);
 
         return { data, total };
+    }
+
+    static async getPendingProviders({ page, limit }: PaginationParams) {
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await prisma.$transaction([
+            prisma.user.findMany({
+                where: { role: 'PROVIDER', providerStatus: 'PENDING' },
+                skip,
+                take: limit,
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true,
+                    createdAt: true,
+                    categoryId: true,
+                    category: {
+                        select: { id: true, name: true }
+                    }
+                },
+            }),
+            prisma.user.count({ where: { role: 'PROVIDER', providerStatus: 'PENDING' } }),
+        ]);
+
+        return { data, total };
+    }
+
+    static async updateProviderStatus(userId: string, newStatus: 'APPROVED' | 'REJECTED') {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (!user || user.role !== 'PROVIDER') {
+            throw new AppError('Provider not found', 404);
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { providerStatus: newStatus },
+            select: { id: true, name: true, email: true, providerStatus: true }
+        });
+
+        // Optionally send a notification or email here
+        // if (newStatus === 'APPROVED') { sendPush(..., 'Your account is approved!') }
+
+        return updatedUser;
     }
 
     static async getProviderBookings(userId: string, { page, limit }: PaginationParams) {
