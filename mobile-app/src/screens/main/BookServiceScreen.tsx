@@ -14,36 +14,51 @@ export default function BookServiceScreen({ route, navigation }: any) {
     const [isLoading, setIsLoading] = useState(false);
     const [loadingText, setLoadingText] = useState('');
 
-    const handleBook = async () => {
-        console.log('Book button clicked');
-        console.log('Service:', service?.id);
-        console.log('Provider:', provider?.id);
-        console.log('Inputs:', { address, scheduledDate, scheduledTime });
+    const handleDateChange = (text: string) => {
+        let cleaned = text.replace(/\D/g, '');
+        if (cleaned.length > 8) cleaned = cleaned.slice(0, 8);
 
+        let formatted = cleaned;
+        if (cleaned.length > 4) {
+            formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}`;
+            if (cleaned.length > 6) {
+                formatted += `-${cleaned.slice(6, 8)}`;
+            }
+        }
+        setScheduledDate(formatted);
+    };
+
+    const handleTimeChange = (text: string) => {
+        let cleaned = text.replace(/\D/g, '');
+        if (cleaned.length > 4) cleaned = cleaned.slice(0, 4);
+
+        let formatted = cleaned;
+        if (cleaned.length > 2) {
+            formatted = `${cleaned.slice(0, 2)}:${cleaned.slice(2, 4)}`;
+        }
+        setScheduledTime(formatted);
+    };
+
+    const handleBook = async () => {
         if (!address.trim() || !scheduledDate.trim() || !scheduledTime.trim()) {
-            console.log('Validation failed: missing fields');
             Alert.alert('Missing Info', 'Please fill in address, date, and time.');
             return;
         }
 
         const combined = `${scheduledDate}T${scheduledTime}:00`;
         const scheduledAt = new Date(combined);
-        console.log('Parsed Date:', scheduledAt.toString());
 
         if (isNaN(scheduledAt.getTime())) {
-            console.log('Validation failed: invalid date format');
             Alert.alert('Invalid Date/Time', 'Use format YYYY-MM-DD for date and HH:MM for time.');
             return;
         }
         if (scheduledAt <= new Date()) {
-            console.log('Validation failed: time in past');
             Alert.alert('Invalid Time', 'Scheduled time must be in the future.');
             return;
         }
 
         setIsLoading(true);
         setLoadingText('Saving Booking...');
-        console.log('Starting API calls...');
 
         try {
             const payload = {
@@ -53,11 +68,8 @@ export default function BookServiceScreen({ route, navigation }: any) {
                 address: address.trim(),
                 notes: notes.trim() || undefined,
             };
-            console.log('Booking Payload:', payload);
 
             const bookingRes = await api.post('/bookings', payload);
-            console.log('Booking created:', bookingRes.data);
-
             const bookingId = bookingRes.data.data.id;
 
             setLoadingText('Processing Payment...');
@@ -66,7 +78,6 @@ export default function BookServiceScreen({ route, navigation }: any) {
                 amount: service.price,
                 paymentMethodId: 'pm_mock_12345'
             });
-            console.log('Payment processed:', paymentRes.data);
 
             Alert.alert(
                 'Booking & Payment Confirmed! 🎉',
@@ -77,10 +88,6 @@ export default function BookServiceScreen({ route, navigation }: any) {
                 ]
             );
         } catch (error: any) {
-            console.error('Booking Error:', error);
-            if (error.response) {
-                console.error('Response Error Data:', error.response.data);
-            }
             Alert.alert('Booking Failed', error.response?.data?.message || 'Something went wrong. Try again.');
         } finally {
             setIsLoading(false);
@@ -90,7 +97,6 @@ export default function BookServiceScreen({ route, navigation }: any) {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-            {/* Service Summary */}
             <View style={styles.summaryCard}>
                 <View style={styles.summaryIcon}>
                     <Text style={styles.summaryIconText}>✦</Text>
@@ -125,10 +131,11 @@ export default function BookServiceScreen({ route, navigation }: any) {
                     <TextInput
                         style={styles.input}
                         value={scheduledDate}
-                        onChangeText={setScheduledDate}
+                        onChangeText={handleDateChange}
                         placeholder="YYYY-MM-DD"
                         placeholderTextColor="#475569"
                         keyboardType="numeric"
+                        maxLength={10}
                     />
                 </View>
                 <View style={[styles.fieldGroup, { flex: 1 }]}>
@@ -136,10 +143,11 @@ export default function BookServiceScreen({ route, navigation }: any) {
                     <TextInput
                         style={styles.input}
                         value={scheduledTime}
-                        onChangeText={setScheduledTime}
+                        onChangeText={handleTimeChange}
                         placeholder="HH:MM"
                         placeholderTextColor="#475569"
                         keyboardType="numeric"
+                        maxLength={5}
                     />
                 </View>
             </View>
@@ -157,7 +165,6 @@ export default function BookServiceScreen({ route, navigation }: any) {
                 />
             </View>
 
-            {/* Price Footer */}
             <View style={styles.priceRow}>
                 <Text style={styles.priceLabel}>Service Total</Text>
                 <Text style={styles.priceValue}>${service.price}</Text>
