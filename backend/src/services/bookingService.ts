@@ -27,34 +27,38 @@ export class BookingService {
             }
         }
 
-        const booking = await prisma.booking.create({
-            data: {
-                customerId,
-                serviceId,
-                providerId: providerId || null,
-                scheduledAt: bookingDate,
-                address,
-                notes,
-                totalAmount: service.price,
-                status: BookingStatus.PENDING,
-            },
-            include: {
-                service: { include: { category: true } },
-                customer: { select: { id: true, name: true } },
-            }
-        });
-
-        if (providerId) {
-            await prisma.notification.create({
+        const bookingResult = await prisma.$transaction(async (tx) => {
+            const booking = await tx.booking.create({
                 data: {
-                    userId: providerId,
-                    title: 'New Booking Request',
-                    message: `${booking.customer.name} requested your ${booking.service.name} service.`
+                    customerId,
+                    serviceId,
+                    providerId: providerId || null,
+                    scheduledAt: bookingDate,
+                    address,
+                    notes,
+                    totalAmount: service.price,
+                    status: BookingStatus.PENDING,
+                },
+                include: {
+                    service: { include: { category: true } },
+                    customer: { select: { id: true, name: true } },
                 }
             });
-        }
 
-        return booking;
+            if (providerId) {
+                await tx.notification.create({
+                    data: {
+                        userId: providerId,
+                        title: 'New Booking Request',
+                        message: `${booking.customer.name} requested your ${booking.service.name} service.`
+                    }
+                });
+            }
+
+            return booking;
+        });
+
+        return bookingResult;
     }
 
     static async getMyBookings(userId: string, role: string, { page, limit }: { page: number; limit: number }) {
@@ -143,28 +147,32 @@ export class BookingService {
             throw new AppError('Only PENDING bookings can be accepted', 400);
         }
 
-        const updatedBooking = await prisma.booking.update({
-            where: { id },
-            data: {
-                status: BookingStatus.ACCEPTED,
-                providerId,
-            },
-            include: {
-                customer: { select: { id: true, name: true, email: true } },
-                service: { include: { category: true } },
-                provider: { select: { name: true } }
-            }
+        const updatedBookingResult = await prisma.$transaction(async (tx) => {
+            const updatedBooking = await tx.booking.update({
+                where: { id },
+                data: {
+                    status: BookingStatus.ACCEPTED,
+                    providerId,
+                },
+                include: {
+                    customer: { select: { id: true, name: true, email: true } },
+                    service: { include: { category: true } },
+                    provider: { select: { name: true } }
+                }
+            });
+
+            await tx.notification.create({
+                data: {
+                    userId: updatedBooking.customerId,
+                    title: 'Booking Accepted! 🎉',
+                    message: `${updatedBooking.provider?.name || 'A professional'} has accepted your ${updatedBooking.service.name} request.`
+                }
+            });
+
+            return updatedBooking;
         });
 
-        await prisma.notification.create({
-            data: {
-                userId: updatedBooking.customerId,
-                title: 'Booking Accepted! 🎉',
-                message: `${updatedBooking.provider?.name || 'A professional'} has accepted your ${updatedBooking.service.name} request.`
-            }
-        });
-
-        return updatedBooking;
+        return updatedBookingResult;
     }
 
     static async rejectBooking(id: string) {
@@ -176,23 +184,27 @@ export class BookingService {
             throw new AppError('This booking cannot be rejected in its current state', 400);
         }
 
-        const updatedBooking = await prisma.booking.update({
-            where: { id },
-            data: { status: BookingStatus.REJECTED },
-            include: {
-                customer: { select: { id: true, name: true, email: true } },
-                service: { include: { category: true } },
-            }
+        const updatedBookingResult = await prisma.$transaction(async (tx) => {
+            const updatedBooking = await tx.booking.update({
+                where: { id },
+                data: { status: BookingStatus.REJECTED },
+                include: {
+                    customer: { select: { id: true, name: true, email: true } },
+                    service: { include: { category: true } },
+                }
+            });
+
+            await tx.notification.create({
+                data: {
+                    userId: updatedBooking.customerId,
+                    title: 'Booking Update',
+                    message: `We're sorry, but the professional had to reject your ${updatedBooking.service.name} request. Please try another provider.`
+                }
+            });
+
+            return updatedBooking;
         });
 
-        await prisma.notification.create({
-            data: {
-                userId: updatedBooking.customerId,
-                title: 'Booking Update',
-                message: `We're sorry, but the professional had to reject your ${updatedBooking.service.name} request. Please try another provider.`
-            }
-        });
-
-        return updatedBooking;
+        return updatedBookingResult;
     }
 }
