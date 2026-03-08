@@ -6,42 +6,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import api from '../../lib/api';
+import { Service, Provider } from '../../types';
+import { useServiceProviders } from '../../hooks/useServiceProviders';
 
 const { width } = Dimensions.get('window');
 
-interface Provider {
-    id: string;
-    name: string;
-    rating: number;
-    jobsDone: number;
-    image: string;
-}
-
 export default function ServiceDetailScreen({ route, navigation }: any) {
     const { service } = route.params;
-    const [providers, setProviders] = useState<Provider[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchProviders = async () => {
-            try {
-                const res = await api.get('/users/providers');
-                // Mocking some stats for the UI
-                const realProviders = res.data.data.map((p: any) => ({
-                    ...p,
-                    rating: 4.5 + Math.random() * 0.5,
-                    jobsDone: Math.floor(Math.random() * 100) + 10,
-                    image: `https://i.pravatar.cc/150?u=${p.id}`
-                }));
-                setProviders(realProviders);
-            } catch (err) {
-                console.log('Error fetching providers:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchProviders();
-    }, []);
+    const { providers, loading } = useServiceProviders();
 
     const serviceImage = service.image || 'https://images.unsplash.com/photo-1581578731522-5b17b8822eda?q=80&w=1000&auto=format&fit=crop';
 
@@ -126,11 +98,11 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
                         <ActivityIndicator color="#7751FF" style={{ marginTop: 30 }} />
                     ) : (
                         providers.map(provider => (
-                            <TouchableOpacity key={provider.id} style={styles.providerCard} activeOpacity={0.8} onPress={() => navigation.navigate('BookService', { service, provider })}>
-                                <Image source={{ uri: provider.image }} style={styles.providerAvatar} />
+                            <TouchableOpacity key={provider.id} style={styles.providerCard} activeOpacity={0.8} onPress={() => navigation.navigate('ProviderDetail', { service, provider })}>
+                                <Image source={{ uri: provider.avatarUrl || 'https://i.pravatar.cc/150' }} style={styles.providerAvatar} />
                                 <View style={styles.providerInfo}>
                                     <Text style={styles.providerName}>{provider.name}</Text>
-                                    <Text style={styles.providerMeta}>⭐ {provider.rating.toFixed(1)} • {provider.jobsDone} jobs completed</Text>
+                                    <Text style={styles.providerMeta}>⭐ {(provider.rating || 4.5).toFixed(1)} • {provider.jobsDone || 0} jobs completed</Text>
                                 </View>
                                 <View style={styles.arrowBox}>
                                     <Text style={styles.arrowIcon}>{"\u203A"}</Text>
