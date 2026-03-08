@@ -5,21 +5,36 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { BackButton } from '../../components/common/BackButton';
+import api from '../../lib/api';
 
 const { width } = Dimensions.get('window');
 
 export default function ProviderDetailScreen({ route, navigation }: any) {
     const { provider, service } = route.params;
 
-    const handleRequestQuote = () => {
-        console.log('[ProviderDetail] Button pressed');
-        console.log('[ProviderDetail] service:', JSON.stringify(service));
-        console.log('[ProviderDetail] provider:', provider?.name);
-        if (!service) {
-            alert('Please go back and choose a service first.');
+    const handleRequestQuote = async () => {
+        let bookingService = service;
+
+        if (!bookingService && provider.categoryId) {
+            try {
+                // Fetch categories to find the services for this provider's category
+                const res = await api.get('/categories');
+                const category = res.data.data.find((c: any) => c.id === provider.categoryId);
+                if (category && category.services.length > 0) {
+                    bookingService = category.services[0];
+                }
+            } catch (error) {
+                console.error('Error fetching category services:', error);
+            }
+        }
+
+        if (!bookingService) {
+            alert('This provider has not listed any services yet.');
             return;
         }
-        navigation.navigate('BookService', { service, provider });
+
+        navigation.navigate('BookService', { service: bookingService, provider });
     };
 
     return (
@@ -29,9 +44,7 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                 {/* Header Profile Section */}
                 <View style={styles.headerBackground}>
                     <SafeAreaView style={styles.headerControls}>
-                        <TouchableOpacity style={styles.backBtn} activeOpacity={0.8} onPress={() => navigation.goBack()}>
-                            <Text style={styles.backIcon}>{"\u2190"}</Text>
-                        </TouchableOpacity>
+                        <BackButton />
                         <TouchableOpacity style={styles.shareBtn} activeOpacity={0.8}>
                             <Text style={styles.shareIcon}>{"\uD83D\uDD17"}</Text>
                         </TouchableOpacity>
@@ -41,6 +54,7 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                         <Image source={{ uri: provider.avatarUrl || 'https://i.pravatar.cc/150' }} style={styles.profileImage} />
                         <View style={styles.nameSection}>
                             <Text style={styles.providerName}>{provider.name}</Text>
+                            <Text style={styles.categoryBadge}>{provider.category?.name || 'Professional Specialist'}</Text>
                             <View style={styles.badgeRow}>
                                 <View style={styles.verifiedBadge}>
                                     <Text style={styles.verifiedText}>Verified Pro</Text>
@@ -115,7 +129,7 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                     activeOpacity={0.9}
                     onPress={handleRequestQuote}
                 >
-                    <Text style={styles.bookBtnText}>{service ? 'Request Quote' : 'Pick a Service'}</Text>
+                    <Text style={styles.bookBtnText}>{service ? 'Request Quote' : 'Book Now'}</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -162,8 +176,16 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 26,
         fontWeight: '900',
-        marginBottom: 12,
+        marginBottom: 4,
         textAlign: 'center',
+    },
+    categoryBadge: {
+        color: '#7751FF',
+        fontSize: 14,
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        marginBottom: 12,
+        letterSpacing: 1.2
     },
     badgeRow: {
         flexDirection: 'row',
