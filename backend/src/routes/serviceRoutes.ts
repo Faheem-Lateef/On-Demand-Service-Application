@@ -2,6 +2,9 @@ import express from 'express';
 import { getCategories, createCategory, createService } from '../controllers/serviceController';
 import { protect, restrictTo } from '../middlewares/authMiddleware';
 
+import { validate } from '../validations/validate';
+import { createCategorySchema, createServiceSchema } from '../validations/categoryValidation';
+
 const router = express.Router();
 
 // Public routes
@@ -11,7 +14,7 @@ router.get('/', getCategories);
 router.use(protect);
 router.use(restrictTo('ADMIN'));
 
-router.post('/', createCategory);
-router.post('/:categoryId/services', createService);
+router.post('/', validate(createCategorySchema), createCategory);
+router.post('/:categoryId/services', validate(createServiceSchema), createService);
 
 export default router;
