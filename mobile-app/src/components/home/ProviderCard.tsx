@@ -28,6 +28,7 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({ provider, index, onP
                         <Text style={styles.providerRatingText}>⭐ {provider.rating ? provider.rating.toFixed(1) : '4.8'}</Text>
                     </View>
                 </View>
+                <Text style={styles.categoryBadge}>{(provider as any).category?.name || 'Pro'}</Text>
                 <Text style={styles.jobsDone}>{provider.email}</Text>
                 <View style={styles.providerStats}>
                     <Text style={styles.providerDistance}>📍 Nearby</Text>
@@ -52,6 +53,7 @@ const styles = StyleSheet.create({
     providerDetails: { flex: 1, marginLeft: 16, justifyContent: 'center' },
     providerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
     providerName: { color: '#ffffff', fontSize: 17, fontWeight: '800' },
+    categoryBadge: { color: '#7751FF', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginBottom: 4 },
     providerRatingBox: { backgroundColor: 'rgba(119, 81, 255, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
     providerRatingText: { color: '#7751FF', fontSize: 12, fontWeight: '800' },
     jobsDone: { color: '#94a3b8', fontSize: 12, marginBottom: 10, fontWeight: '500' },
