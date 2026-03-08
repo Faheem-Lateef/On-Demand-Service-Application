@@ -7,10 +7,9 @@ import {
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
-interface ServiceOption {
+interface CategoryOption {
     id: string;
     name: string;
-    categoryName: string;
 }
 
 export default function RegisterScreen({ navigation }: any) {
@@ -19,29 +18,20 @@ export default function RegisterScreen({ navigation }: any) {
     const [password, setPassword] = useState('');
     const [role, setRole] = useState<'CUSTOMER' | 'PROVIDER'>('CUSTOMER');
     const [isLoading, setIsLoading] = useState(false);
-    const [services, setServices] = useState<ServiceOption[]>([]);
-    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+    const [categories, setCategories] = useState<CategoryOption[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
     const { login } = useAuth();
 
-    // Fetch services when user picks PROVIDER
+    // Fetch categories when user picks PROVIDER
     useEffect(() => {
         if (role === 'PROVIDER') {
             api.get('/categories').then(res => {
-                const flat: ServiceOption[] = (res.data.data as any[]).flatMap(cat =>
-                    cat.services.map((s: any) => ({ id: s.id, name: s.name, categoryName: cat.name }))
-                );
-                setServices(flat);
+                setCategories(res.data.data);
             }).catch(() => { });
         } else {
-            setSelectedServiceIds([]);
+            setSelectedCategoryId(null);
         }
     }, [role]);
-
-    const toggleService = (id: string) => {
-        setSelectedServiceIds(prev =>
-            prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-        );
-    };
 
     const handleRegister = async () => {
         if (!name.trim() || !email.trim() || !password.trim()) {
@@ -52,8 +42,8 @@ export default function RegisterScreen({ navigation }: any) {
             Alert.alert('Weak Password', 'Password must be at least 6 characters.');
             return;
         }
-        if (role === 'PROVIDER' && selectedServiceIds.length === 0) {
-            Alert.alert('Select Services', 'Please select at least one service you offer.');
+        if (role === 'PROVIDER' && !selectedCategoryId) {
+            Alert.alert('Select Category', 'Please select your category of expertise.');
             return;
         }
 
@@ -64,7 +54,7 @@ export default function RegisterScreen({ navigation }: any) {
                 email: email.trim(),
                 password,
                 role,
-                serviceIds: role === 'PROVIDER' ? selectedServiceIds : [],
+                categoryId: role === 'PROVIDER' ? selectedCategoryId : undefined,
             });
             const { user, token } = response.data.data;
             await login(user, token);
@@ -120,23 +110,22 @@ export default function RegisterScreen({ navigation }: any) {
                         </View>
                     </View>
 
-                    {/* Service Selection for Providers */}
-                    {role === 'PROVIDER' && services.length > 0 && (
+                    {/* Category Selection for Providers */}
+                    {role === 'PROVIDER' && categories.length > 0 && (
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>SERVICES YOU OFFER *</Text>
+                            <Text style={styles.label}>CATEGORY OF EXPERTISE *</Text>
                             <View style={styles.serviceGrid}>
-                                {services.map(s => {
-                                    const selected = selectedServiceIds.includes(s.id);
+                                {categories.map(c => {
+                                    const selected = selectedCategoryId === c.id;
                                     return (
                                         <TouchableOpacity
-                                            key={s.id}
+                                            key={c.id}
                                             style={[styles.serviceChip, selected && styles.serviceChipActive]}
-                                            onPress={() => toggleService(s.id)}
+                                            onPress={() => setSelectedCategoryId(c.id)}
                                         >
                                             <Text style={[styles.serviceChipText, selected && styles.serviceChipTextActive]}>
-                                                {s.name}
+                                                {c.name}
                                             </Text>
-                                            <Text style={styles.serviceCategoryText}>{s.categoryName}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
