@@ -15,11 +15,37 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
 });
 
 // @desc    Get user's bookings (role-aware)
-// @route   GET /api/bookings/my-bookings
+// @route   GET /api/bookings/my-bookings?page=1&limit=20
 // @access  Private
 export const getMyBookings = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const bookings = await BookingService.getMyBookings(req.user!.id, req.user!.role);
-    res.status(200).json({ success: true, results: bookings.length, data: bookings });
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const { data, total } = await BookingService.getMyBookings(req.user!.id, req.user!.role, { page, limit });
+    res.status(200).json({
+        success: true,
+        results: data.length,
+        total,
+        page,
+        limit,
+        data,
+    });
+});
+
+// @desc    Get all bookings (Admin only)
+// @route   GET /api/bookings?page=1&limit=20
+// @access  Private
+export const getAllBookings = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const { data, total } = await BookingService.getAllBookings({ page, limit });
+    res.status(200).json({
+        success: true,
+        results: data.length,
+        total,
+        page,
+        limit,
+        data,
+    });
 });
 
 // @desc    Update booking status (generic endpoint for admin)
