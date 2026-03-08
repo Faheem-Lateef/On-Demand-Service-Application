@@ -11,9 +11,10 @@ export default function AllProvidersScreen({ navigation }: any) {
     const { providers, categories, loading } = useHomeData();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-    // Derive unique category names from providers' booking history
+    // List providers by direct category or booking history
     const filteredProviders = selectedCategory
         ? providers.filter(p =>
+            (p as any).category?.name === selectedCategory ||
             (p as any).providerBookings?.some(
                 (b: any) => b.service?.category?.name === selectedCategory
             )
@@ -32,6 +33,7 @@ export default function AllProvidersScreen({ navigation }: any) {
             />
             <View style={styles.cardInfo}>
                 <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.categoryBadge}>{(item as any).category?.name || 'Professional'}</Text>
                 <Text style={styles.email}>{item.email}</Text>
                 <View style={styles.ratingRow}>
                     <Text style={styles.ratingText}>⭐ {(item.rating || 4.8).toFixed(1)}</Text>
@@ -129,6 +131,7 @@ const styles = StyleSheet.create({
     avatar: { width: 60, height: 60, borderRadius: 18 },
     cardInfo: { flex: 1, marginLeft: 14 },
     name: { color: '#ffffff', fontSize: 16, fontWeight: '800', marginBottom: 4 },
+    categoryBadge: { color: '#7751FF', fontSize: 12, fontWeight: '800', textTransform: 'uppercase', marginBottom: 4 },
     email: { color: '#64748b', fontSize: 12, fontWeight: '500', marginBottom: 8 },
     ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     ratingText: { color: '#FFD700', fontSize: 12, fontWeight: '700' },
