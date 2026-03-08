@@ -6,7 +6,7 @@ import {
 import api from '../../lib/api';
 
 export default function BookServiceScreen({ route, navigation }: any) {
-    const { service } = route.params;
+    const { service, provider } = route.params;
     const [address, setAddress] = useState('');
     const [notes, setNotes] = useState('');
     const [scheduledDate, setScheduledDate] = useState('');
@@ -15,43 +15,58 @@ export default function BookServiceScreen({ route, navigation }: any) {
     const [loadingText, setLoadingText] = useState('');
 
     const handleBook = async () => {
+        console.log('Book button clicked');
+        console.log('Service:', service?.id);
+        console.log('Provider:', provider?.id);
+        console.log('Inputs:', { address, scheduledDate, scheduledTime });
+
         if (!address.trim() || !scheduledDate.trim() || !scheduledTime.trim()) {
+            console.log('Validation failed: missing fields');
             Alert.alert('Missing Info', 'Please fill in address, date, and time.');
             return;
         }
 
-        // Build ISO datetime string
         const combined = `${scheduledDate}T${scheduledTime}:00`;
         const scheduledAt = new Date(combined);
+        console.log('Parsed Date:', scheduledAt.toString());
+
         if (isNaN(scheduledAt.getTime())) {
+            console.log('Validation failed: invalid date format');
             Alert.alert('Invalid Date/Time', 'Use format YYYY-MM-DD for date and HH:MM for time.');
             return;
         }
         if (scheduledAt <= new Date()) {
+            console.log('Validation failed: time in past');
             Alert.alert('Invalid Time', 'Scheduled time must be in the future.');
             return;
         }
 
         setIsLoading(true);
         setLoadingText('Saving Booking...');
+        console.log('Starting API calls...');
+
         try {
-            // 1. Create Booking
-            const bookingRes = await api.post('/bookings', {
+            const payload = {
                 serviceId: service.id,
+                providerId: provider?.id || undefined,
                 scheduledTime: scheduledAt.toISOString(),
                 address: address.trim(),
                 notes: notes.trim() || undefined,
-            });
+            };
+            console.log('Booking Payload:', payload);
+
+            const bookingRes = await api.post('/bookings', payload);
+            console.log('Booking created:', bookingRes.data);
 
             const bookingId = bookingRes.data.data.id;
 
-            // 2. Process Mock Payment (Phase 8 Bonus)
             setLoadingText('Processing Payment...');
             const paymentRes = await api.post('/payments', {
                 bookingId,
                 amount: service.price,
                 paymentMethodId: 'pm_mock_12345'
             });
+            console.log('Payment processed:', paymentRes.data);
 
             Alert.alert(
                 'Booking & Payment Confirmed! 🎉',
@@ -62,6 +77,10 @@ export default function BookServiceScreen({ route, navigation }: any) {
                 ]
             );
         } catch (error: any) {
+            console.error('Booking Error:', error);
+            if (error.response) {
+                console.error('Response Error Data:', error.response.data);
+            }
             Alert.alert('Booking Failed', error.response?.data?.message || 'Something went wrong. Try again.');
         } finally {
             setIsLoading(false);
@@ -78,6 +97,9 @@ export default function BookServiceScreen({ route, navigation }: any) {
                 </View>
                 <View style={{ flex: 1 }}>
                     <Text style={styles.summaryName}>{service.name}</Text>
+                    {provider && (
+                        <Text style={styles.providerBadge}>With Professional: {provider.name}</Text>
+                    )}
                     <Text style={styles.summaryPrice}>Total: ${service.price}</Text>
                 </View>
             </View>
@@ -176,6 +198,7 @@ const styles = StyleSheet.create({
     },
     summaryIconText: { color: '#60a5fa', fontSize: 22 },
     summaryName: { color: '#f1f5f9', fontWeight: '700', fontSize: 17 },
+    providerBadge: { color: '#7751FF', fontWeight: '800', fontSize: 13, marginTop: 4, textTransform: 'uppercase' },
     summaryPrice: { color: '#34d399', fontWeight: '600', fontSize: 14, marginTop: 4 },
     sectionTitle: { color: '#475569', fontWeight: '700', fontSize: 11, letterSpacing: 1.5, marginBottom: 16 },
     fieldGroup: { marginBottom: 16 },
