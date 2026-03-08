@@ -18,6 +18,7 @@ import BookServiceScreen from '../screens/main/BookServiceScreen';
 import ServiceDetailScreen from '../screens/main/ServiceDetailScreen';
 import ProviderDetailScreen from '../screens/main/ProviderDetailScreen';
 import AllProvidersScreen from '../screens/main/AllProvidersScreen';
+import NotificationsScreen from '../screens/main/NotificationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -57,6 +58,11 @@ function HomeStack() {
             <Stack.Screen
                 name="AllProviders"
                 component={AllProvidersScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="Notifications"
+                component={NotificationsScreen}
                 options={{ headerShown: false }}
             />
         </Stack.Navigator>
