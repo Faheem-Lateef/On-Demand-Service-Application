@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { StatusBar } from 'expo-status-bar';
 import { useHomeData } from '../../hooks/useHomeData';
 import { ProviderCard } from '../../components/home/ProviderCard';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +24,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 export default function CustomerHomeScreen({ navigation }: any) {
     const { user } = useAuth();
     const { categories, popularServices, providers, loading, refreshing, onRefresh } = useHomeData();
+    const { unreadCount } = useNotifications();
 
     if (loading) {
         return (
@@ -56,9 +58,13 @@ export default function CustomerHomeScreen({ navigation }: any) {
                             <Text style={styles.userName}>{user?.name?.split(' ')[0] || 'Faheem'}</Text>
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.8}>
+                    <TouchableOpacity
+                        style={styles.notificationBtn}
+                        activeOpacity={0.8}
+                        onPress={() => navigation.navigate('Notifications')}
+                    >
                         <Text style={styles.notificationIcon}>🔔</Text>
-                        <View style={styles.notificationDot} />
+                        {unreadCount > 0 && <View style={styles.notificationDot} />}
                     </TouchableOpacity>
                 </View>
 
