@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import api from '../../lib/api';
 import { Service, Provider } from '../../types';
 import { useServiceProviders } from '../../hooks/useServiceProviders';
+import { BackButton } from '../../components/common/BackButton';
 
 const { width } = Dimensions.get('window');
 
@@ -26,9 +27,7 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
                     <Image source={{ uri: serviceImage }} style={styles.heroImage} />
                     <View style={styles.heroOverlay} />
                     <SafeAreaView style={styles.headerControls}>
-                        <TouchableOpacity style={styles.backBtn} activeOpacity={0.8} onPress={() => navigation.goBack()}>
-                            <Text style={styles.backIcon}>{"\u2190"}</Text>
-                        </TouchableOpacity>
+                        <BackButton />
                         <TouchableOpacity style={styles.shareBtn} activeOpacity={0.8}>
                             <Text style={styles.shareIcon}>{"\uD83D\uDD17"}</Text>
                         </TouchableOpacity>
