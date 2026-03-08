@@ -1,6 +1,7 @@
 import prisma from '../utils/prisma';
 import AppError from '../utils/appError';
 import { BookingStatus } from '@prisma/client';
+import { sendMockPushNotification } from '../utils/pushNotifications';
 
 export class BookingService {
     static async createBooking(data: { customerId: string, serviceId: string, scheduledTime: string, address: string, notes?: string, providerId?: string }) {
@@ -43,10 +44,21 @@ export class BookingService {
             }
         });
 
+        if (providerId) {
+            await prisma.notification.create({
+                data: {
+                    userId: providerId,
+                    title: 'New Booking Request',
+                    message: `${booking.customer.name} requested your ${booking.service.name} service.`
+                }
+            });
+        }
+
         return booking;
     }
 
-    static async getMyBookings(userId: string, role: string) {
+    static async getMyBookings(userId: string, role: string, { page, limit }: { page: number; limit: number }) {
+        const skip = (page - 1) * limit;
         let query: any = {};
 
         if (role === 'CUSTOMER') {
@@ -60,16 +72,41 @@ export class BookingService {
             };
         }
 
-        const bookings = await prisma.booking.findMany({
-            where: query,
-            include: {
-                customer: { select: { id: true, name: true, email: true } },
-                service: { include: { category: true } },
-            },
-            orderBy: { scheduledAt: 'asc' }
-        });
+        const [data, total] = await prisma.$transaction([
+            prisma.booking.findMany({
+                where: query,
+                skip,
+                take: limit,
+                include: {
+                    customer: { select: { id: true, name: true, email: true } },
+                    service: { include: { category: true } },
+                },
+                orderBy: { scheduledAt: 'asc' }
+            }),
+            prisma.booking.count({ where: query }),
+        ]);
 
-        return bookings;
+        return { data, total };
+    }
+
+    static async getAllBookings({ page, limit }: { page: number; limit: number }) {
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await prisma.$transaction([
+            prisma.booking.findMany({
+                skip,
+                take: limit,
+                include: {
+                    customer: { select: { id: true, name: true, email: true } },
+                    provider: { select: { id: true, name: true, email: true } },
+                    service: { include: { category: true } },
+                },
+                orderBy: { scheduledAt: 'desc' },
+            }),
+            prisma.booking.count(),
+        ]);
+
+        return { data, total };
     }
 
     static async updateBookingStatus(id: string, status: string) {
@@ -91,7 +128,6 @@ export class BookingService {
             }
         });
 
-        const { sendMockPushNotification } = require('../utils/pushNotifications');
         const pushBody = `Your booking for "${updatedBooking.service.name}" has been marked as ${status}.`;
         sendMockPushNotification(updatedBooking.customerId, 'Booking Status Update', pushBody).catch(console.error);
 
@@ -116,6 +152,15 @@ export class BookingService {
             include: {
                 customer: { select: { id: true, name: true, email: true } },
                 service: { include: { category: true } },
+                provider: { select: { name: true } }
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: updatedBooking.customerId,
+                title: 'Booking Accepted! 🎉',
+                message: `${updatedBooking.provider?.name || 'A professional'} has accepted your ${updatedBooking.service.name} request.`
             }
         });
 
@@ -137,6 +182,14 @@ export class BookingService {
             include: {
                 customer: { select: { id: true, name: true, email: true } },
                 service: { include: { category: true } },
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: updatedBooking.customerId,
+                title: 'Booking Update',
+                message: `We're sorry, but the professional had to reject your ${updatedBooking.service.name} request. Please try another provider.`
             }
         });
 
