@@ -9,7 +9,18 @@ import { StatusBar } from 'expo-status-bar';
 const { width } = Dimensions.get('window');
 
 export default function ProviderDetailScreen({ route, navigation }: any) {
-    const { provider } = route.params;
+    const { provider, service } = route.params;
+
+    const handleRequestQuote = () => {
+        console.log('[ProviderDetail] Button pressed');
+        console.log('[ProviderDetail] service:', JSON.stringify(service));
+        console.log('[ProviderDetail] provider:', provider?.name);
+        if (!service) {
+            alert('Please go back and choose a service first.');
+            return;
+        }
+        navigation.navigate('BookService', { service, provider });
+    };
 
     return (
         <View style={styles.container}>
@@ -27,7 +38,7 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                     </SafeAreaView>
 
                     <View style={styles.profileHeader}>
-                        <Image source={{ uri: provider.image }} style={styles.profileImage} />
+                        <Image source={{ uri: provider.avatarUrl || 'https://i.pravatar.cc/150' }} style={styles.profileImage} />
                         <View style={styles.nameSection}>
                             <Text style={styles.providerName}>{provider.name}</Text>
                             <View style={styles.badgeRow}>
@@ -35,7 +46,7 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                                     <Text style={styles.verifiedText}>Verified Pro</Text>
                                 </View>
                                 <View style={styles.ratingBadge}>
-                                    <Text style={styles.ratingText}>⭐ {provider.rating}</Text>
+                                    <Text style={styles.ratingText}>⭐ {provider.rating || '4.8'}</Text>
                                 </View>
                             </View>
                         </View>
@@ -46,17 +57,17 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                     {/* Stats Row */}
                     <View style={styles.statsRow}>
                         <View style={styles.statItem}>
-                            <Text style={styles.statValue}>{provider.jobsDone}+</Text>
+                            <Text style={styles.statValue}>{provider.jobsDone || 12}+</Text>
                             <Text style={styles.statLabel}>Jobs Done</Text>
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
-                            <Text style={styles.statValue}>{provider.distance}</Text>
+                            <Text style={styles.statValue}>Nearby</Text>
                             <Text style={styles.statLabel}>Distance</Text>
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
-                            <Text style={styles.statValue}>${provider.hourlyRate}</Text>
+                            <Text style={styles.statValue}>$25</Text>
                             <Text style={styles.statLabel}>Per Hour</Text>
                         </View>
                     </View>
@@ -64,10 +75,10 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                     {/* About Section */}
                     <Text style={styles.sectionTitle}>About Specialist</Text>
                     <Text style={styles.description}>
-                        With over 5 years of experience, {provider.name} is a top-rated professional dedicated to providing high-quality services. Known for punctuality and attention to detail, ensuring every job is completed to the highest standard.
+                        With over 5 years of experience, {provider.name} is a top-rated professional dedicated to providing high-quality services. Known for punctuality and attention to detail.
                     </Text>
 
-                    {/* Skills/Services Section */}
+                    {/* Services Section */}
                     <Text style={styles.sectionTitle}>Services Provided</Text>
                     <View style={styles.servicesGrid}>
                         {['Maintenance', 'Repair', 'Installation', 'Consultation'].map((item, index) => (
@@ -77,22 +88,17 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                         ))}
                     </View>
 
-                    {/* Reviews Sneak Peek */}
+                    {/* Reviews */}
                     <View style={styles.reviewsHeader}>
                         <Text style={styles.sectionTitle}>Recent Reviews</Text>
-                        <TouchableOpacity><Text style={styles.viewAll}>View All</Text></TouchableOpacity>
                     </View>
-
                     {[1, 2].map((i) => (
                         <View key={i} style={styles.reviewCard}>
                             <View style={styles.reviewHeader}>
-                                <View style={styles.reviewerInfo}>
-                                    <View style={styles.reviewerAvatarPlaceholder} />
-                                    <Text style={styles.reviewerName}>User {i}</Text>
-                                </View>
+                                <Text style={styles.reviewerName}>Happy Customer {i}</Text>
                                 <Text style={styles.reviewStars}>⭐⭐⭐⭐⭐</Text>
                             </View>
-                            <Text style={styles.reviewText}>Excellent work! Very professional and efficient. Highly recommend.</Text>
+                            <Text style={styles.reviewText}>Excellent work! Very professional and efficient.</Text>
                         </View>
                     ))}
                 </View>
@@ -104,8 +110,12 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                 <TouchableOpacity style={styles.chatBtn} activeOpacity={0.8}>
                     <Text style={styles.chatIcon}>💬</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.bookBtn} activeOpacity={0.9}>
-                    <Text style={styles.bookBtnText}>Request Quote</Text>
+                <TouchableOpacity
+                    style={styles.bookBtn}
+                    activeOpacity={0.9}
+                    onPress={handleRequestQuote}
+                >
+                    <Text style={styles.bookBtnText}>{service ? 'Request Quote' : 'Pick a Service'}</Text>
                 </TouchableOpacity>
             </View>
         </View>
