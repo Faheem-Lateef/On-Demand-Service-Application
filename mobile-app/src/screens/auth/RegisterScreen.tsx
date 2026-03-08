@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, ActivityIndicator, KeyboardAvoidingView,
@@ -7,13 +7,41 @@ import {
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
+interface ServiceOption {
+    id: string;
+    name: string;
+    categoryName: string;
+}
+
 export default function RegisterScreen({ navigation }: any) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState<'CUSTOMER' | 'PROVIDER'>('CUSTOMER');
     const [isLoading, setIsLoading] = useState(false);
+    const [services, setServices] = useState<ServiceOption[]>([]);
+    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
     const { login } = useAuth();
+
+    // Fetch services when user picks PROVIDER
+    useEffect(() => {
+        if (role === 'PROVIDER') {
+            api.get('/categories').then(res => {
+                const flat: ServiceOption[] = (res.data.data as any[]).flatMap(cat =>
+                    cat.services.map((s: any) => ({ id: s.id, name: s.name, categoryName: cat.name }))
+                );
+                setServices(flat);
+            }).catch(() => { });
+        } else {
+            setSelectedServiceIds([]);
+        }
+    }, [role]);
+
+    const toggleService = (id: string) => {
+        setSelectedServiceIds(prev =>
+            prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+        );
+    };
 
     const handleRegister = async () => {
         if (!name.trim() || !email.trim() || !password.trim()) {
@@ -24,6 +52,11 @@ export default function RegisterScreen({ navigation }: any) {
             Alert.alert('Weak Password', 'Password must be at least 6 characters.');
             return;
         }
+        if (role === 'PROVIDER' && selectedServiceIds.length === 0) {
+            Alert.alert('Select Services', 'Please select at least one service you offer.');
+            return;
+        }
+
         setIsLoading(true);
         try {
             const response = await api.post('/auth/register', {
@@ -31,6 +64,7 @@ export default function RegisterScreen({ navigation }: any) {
                 email: email.trim(),
                 password,
                 role,
+                serviceIds: role === 'PROVIDER' ? selectedServiceIds : [],
             });
             const { user, token } = response.data.data;
             await login(user, token);
@@ -86,6 +120,30 @@ export default function RegisterScreen({ navigation }: any) {
                         </View>
                     </View>
 
+                    {/* Service Selection for Providers */}
+                    {role === 'PROVIDER' && services.length > 0 && (
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>SERVICES YOU OFFER *</Text>
+                            <View style={styles.serviceGrid}>
+                                {services.map(s => {
+                                    const selected = selectedServiceIds.includes(s.id);
+                                    return (
+                                        <TouchableOpacity
+                                            key={s.id}
+                                            style={[styles.serviceChip, selected && styles.serviceChipActive]}
+                                            onPress={() => toggleService(s.id)}
+                                        >
+                                            <Text style={[styles.serviceChipText, selected && styles.serviceChipTextActive]}>
+                                                {s.name}
+                                            </Text>
+                                            <Text style={styles.serviceCategoryText}>{s.categoryName}</Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </View>
+                    )}
+
                     <TouchableOpacity
                         style={[styles.button, isLoading && styles.buttonDisabled]}
                         onPress={handleRegister} disabled={isLoading} activeOpacity={0.85}
@@ -122,17 +180,28 @@ const styles = StyleSheet.create({
         borderWidth: 1, borderColor: '#334155', alignItems: 'center',
         backgroundColor: '#1e293b',
     },
-    roleBtnActive: { borderColor: '#3b82f6', backgroundColor: '#1d4ed8' + '22' },
+    roleBtnActive: { borderColor: '#7751FF', backgroundColor: '#7751FF22' },
     roleBtnText: { color: '#64748b', fontWeight: '600', fontSize: 13 },
-    roleBtnTextActive: { color: '#60a5fa' },
+    roleBtnTextActive: { color: '#7751FF' },
+
+    serviceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    serviceChip: {
+        paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
+        backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#334155',
+    },
+    serviceChipActive: { borderColor: '#7751FF', backgroundColor: '#7751FF22' },
+    serviceChipText: { color: '#94a3b8', fontSize: 13, fontWeight: '700' },
+    serviceChipTextActive: { color: '#7751FF' },
+    serviceCategoryText: { color: '#475569', fontSize: 10, marginTop: 2 },
+
     button: {
-        backgroundColor: '#2563eb', borderRadius: 14, paddingVertical: 16,
+        backgroundColor: '#7751FF', borderRadius: 14, paddingVertical: 16,
         alignItems: 'center', marginTop: 8,
-        shadowColor: '#2563eb', shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
+        shadowColor: '#7751FF', shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
     },
     buttonDisabled: { opacity: 0.6 },
     buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
     linkRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
     linkText: { color: '#64748b', fontSize: 14 },
-    link: { color: '#3b82f6', fontSize: 14, fontWeight: '600' },
+    link: { color: '#7751FF', fontSize: 14, fontWeight: '600' },
 });
