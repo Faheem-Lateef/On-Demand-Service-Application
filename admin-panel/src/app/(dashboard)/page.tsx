@@ -19,28 +19,31 @@ interface Stats {
     services: number;
     bookings: number;
     pendingBookings: number;
+    activeProviders: number;
 }
 
 export default function DashboardPage() {
     const { user } = useAuth();
-    const [stats, setStats] = useState<Stats>({ users: 0, services: 0, bookings: 0, pendingBookings: 0 });
+    const [stats, setStats] = useState<Stats>({ users: 0, services: 0, bookings: 0, pendingBookings: 0, activeProviders: 0 });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
                 // Fetch users, categories, and bookings to calculate stats
-                const [usersRes, categoriesRes, bookingsRes] = await Promise.all([
+                const [usersRes, categoriesRes, bookingsRes, providersRes] = await Promise.all([
                     api.get('/users'),
                     api.get('/categories'),
-                    api.get('/bookings/my-bookings')
+                    api.get('/bookings'),
+                    api.get('/users/providers')
                 ]);
 
                 setStats({
                     users: usersRes.data.results || 0,
                     services: categoriesRes.data.data.reduce((acc: number, cat: any) => acc + (cat.services?.length || 0), 0),
                     bookings: bookingsRes.data.results || 0,
-                    pendingBookings: bookingsRes.data.data.filter((b: any) => b.status === 'PENDING').length
+                    pendingBookings: bookingsRes.data.data.filter((b: any) => b.status === 'PENDING').length,
+                    activeProviders: providersRes.data.results || 0
                 });
             } catch (error) {
                 toast.error('Failed to load dashboard statistics');
@@ -113,10 +116,10 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-2xl">
                             <div className="flex items-center space-x-3">
-                                <AlertCircle className="text-amber-500 w-5 h-5" />
-                                <span className="text-slate-300">New Providers Pending</span>
+                                <Users className="text-blue-500 w-5 h-5" />
+                                <span className="text-slate-300">Total Active Providers</span>
                             </div>
-                            <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-xs font-bold rounded-full">3 REVIEW</span>
+                            <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-xs font-bold rounded-full">{loading ? '...' : stats.activeProviders} ACTIVE</span>
                         </div>
                     </div>
                 </div>
