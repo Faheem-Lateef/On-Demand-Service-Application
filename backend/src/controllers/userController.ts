@@ -102,3 +102,14 @@ export const rejectProvider = asyncHandler(async (req: AuthRequest, res: Respons
         data: user,
     });
 });
+
+// @desc    Delete a user
+// @route   DELETE /api/users/:id
+// @access  Private (Admin only)
+export const deleteUser = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    await UserService.deleteUser(req.params.id as string);
+    res.status(200).json({
+        success: true,
+        message: 'User deleted successfully',
+    });
+});
