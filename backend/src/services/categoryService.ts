@@ -28,4 +28,15 @@ export class CategoryService {
             },
         });
     }
+
+    static async deleteCategory(categoryId: string) {
+        // We delete the services sequentially, or rely on onDelete: Cascade.
+        // It's safer to delete child services manually if cascade isn't strictly declared or we want to double check.
+        await prisma.service.deleteMany({ where: { categoryId } });
+        return await prisma.category.delete({ where: { id: categoryId } });
+    }
+
+    static async deleteService(serviceId: string) {
+        return await prisma.service.delete({ where: { id: serviceId } });
+    }
 }
