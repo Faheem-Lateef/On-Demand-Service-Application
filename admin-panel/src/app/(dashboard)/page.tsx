@@ -30,21 +30,11 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                // Fetch users, categories, and bookings to calculate stats
-                const [usersRes, categoriesRes, bookingsRes, providersRes] = await Promise.all([
-                    api.get('/users'),
-                    api.get('/categories'),
-                    api.get('/bookings'),
-                    api.get('/users/providers')
-                ]);
+                // Fetch the stats aggregated directly by the database
+                const response = await api.get('/admin/stats');
 
-                setStats({
-                    users: usersRes.data.results || 0,
-                    services: categoriesRes.data.data.reduce((acc: number, cat: any) => acc + (cat.services?.length || 0), 0),
-                    bookings: bookingsRes.data.results || 0,
-                    pendingBookings: bookingsRes.data.data.filter((b: any) => b.status === 'PENDING').length,
-                    activeProviders: providersRes.data.results || 0
-                });
+                // Set directly from the API response
+                setStats(response.data.data);
             } catch (error) {
                 toast.error('Failed to load dashboard statistics');
             } finally {
