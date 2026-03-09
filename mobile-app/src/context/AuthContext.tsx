@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../lib/api';
 
 interface User {
     id: string;
@@ -50,8 +51,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = async () => {
-        await AsyncStorage.removeItem('userToken');
-        await AsyncStorage.removeItem('userData');
+        // Inform the server to clear the stored refresh token hash.
+        // Fire-and-forget: local state is always purged regardless of network outcome.
+        api.post('/auth/logout').catch(() => { });
+
+        // Atomically remove all session keys from device storage
+        await AsyncStorage.multiRemove(['userToken', 'userData', 'refreshToken']);
+
         setUser(null);
         setToken(null);
     };

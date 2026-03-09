@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
-    baseURL: 'http://10.198.157.25:3000/api', // Local network IP — works for real devices & Expo Go
+    baseURL: 'http://192.168.100.13:3000/api', // Local network IP — works for real devices & Expo Go
     headers: {
         'Content-Type': 'application/json',
     },
