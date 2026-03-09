@@ -40,3 +40,19 @@ export const createService = asyncHandler(async (req: Request, res: Response, ne
         data: service,
     });
 });
+
+// @desc    Delete a category
+// @route   DELETE /api/categories/:id
+// @access  Private (Admin only)
+export const deleteCategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    await CategoryService.deleteCategory(req.params.id as string);
+    res.status(200).json({ success: true, message: 'Category deleted' });
+});
+
+// @desc    Delete a service
+// @route   DELETE /api/categories/services/:serviceId
+// @access  Private (Admin only)
+export const deleteService = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    await CategoryService.deleteService(req.params.serviceId as string);
+    res.status(200).json({ success: true, message: 'Service deleted' });
+});
