@@ -147,7 +147,6 @@ export default function ProviderHomeScreen({ navigation }: any) {
                     <QuickAction icon="📅" title="Bookings" color="#7751FF" onPress={() => navigation.navigate('Bookings')} />
                     <QuickAction icon="👤" title="Profile" color="#6366F1" onPress={() => navigation.navigate('Profile')} />
                     <QuickAction icon="🔔" title="Alerts" color="#10B981" onPress={() => navigation.navigate('Notifications')} />
-                    <QuickAction icon="💬" title="Messages" color="#3B82F6" onPress={() => { }} />
                 </View>
 
                 {/* Incoming Booking Requests */}
@@ -285,7 +284,7 @@ const styles = StyleSheet.create({
 
     sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '800', marginLeft: 24, marginBottom: 16 },
     actionsGrid: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 30 },
-    actionItem: { width: (width - 32) / 4, alignItems: 'center' },
+    actionItem: { width: (width - 32) / 3, alignItems: 'center' },
     actionIconBox: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
     actionIcon: { fontSize: 22 },
     actionLabel: { color: '#94a3b8', fontSize: 11, fontWeight: '600', textAlign: 'center' },
