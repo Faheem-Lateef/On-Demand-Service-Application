@@ -7,7 +7,6 @@ const adapter = new PrismaMariaDb(process.env.DATABASE_URL as string);
 const prisma = new PrismaClient({ adapter });
 
 async function fix() {
-    console.log("Fixing categories...");
     const categories = ['Plumbing', 'AC Service', 'Electrical', 'Cleaning', 'Other'];
     for (const name of categories) {
         await prisma.category.upsert({
@@ -15,7 +14,6 @@ async function fix() {
             update: {},
             create: { name }
         });
-        console.log("Upserted:", name);
     }
 }
 
