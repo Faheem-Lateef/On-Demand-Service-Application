@@ -1,7 +1,12 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import prisma from '../utils/prisma';
 import AppError from '../utils/appError';
 import { RegisterInput, LoginInput } from '../validations/authValidation';
+
+/** Returns a SHA-256 hex digest of the given token string. */
+export const hashToken = (token: string): string =>
+    crypto.createHash('sha256').update(token).digest('hex');
 
 export class AuthService {
     static async registerUser(data: RegisterInput) {
@@ -66,4 +71,38 @@ export class AuthService {
             categoryId: user.categoryId
         };
     }
+
+    /** Stores a SHA-256 hash of the issued refresh token in the database. */
+    static async storeRefreshToken(userId: string, rawToken: string): Promise<void> {
+        await prisma.user.update({
+            where: { id: userId },
+            data: { refreshToken: hashToken(rawToken) },
+        });
+    }
+
+    /**
+     * Verifies that the provided raw refresh token matches the stored hash.
+     * Throws 401 AppError if the user is not found or the token does not match.
+     */
+    static async validateRefreshToken(userId: string, rawToken: string): Promise<{ id: string; role: string }> {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, role: true, refreshToken: true },
+        });
+
+        if (!user || user.refreshToken !== hashToken(rawToken)) {
+            throw new AppError('Invalid or expired refresh token', 401);
+        }
+
+        return { id: user.id, role: user.role };
+    }
+
+    /** Clears the stored refresh token hash, effectively revoking all refresh capability. */
+    static async clearRefreshToken(userId: string): Promise<void> {
+        await prisma.user.update({
+            where: { id: userId },
+            data: { refreshToken: null },
+        });
+    }
 }
+

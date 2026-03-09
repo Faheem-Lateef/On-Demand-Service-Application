@@ -38,6 +38,7 @@ export const errorHandler = (
         }
     } else {
         // If it's a generic unhandled error
+        console.error('ERROR 💥:', err);
         if (process.env.NODE_ENV === 'development') {
             message = err.message;
         }
