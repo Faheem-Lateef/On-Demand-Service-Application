@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCategories, createCategory, createService } from '../controllers/serviceController';
+import { getCategories, createCategory, createService, deleteCategory, deleteService } from '../controllers/serviceController';
 import { protect, restrictTo } from '../middlewares/authMiddleware';
 
 import { validate } from '../validations/validate';
@@ -16,5 +16,8 @@ router.use(restrictTo('ADMIN'));
 
 router.post('/', validate(createCategorySchema), createCategory);
 router.post('/:categoryId/services', validate(createServiceSchema), createService);
+
+router.delete('/:id', deleteCategory);
+router.delete('/services/:serviceId', deleteService);
 
 export default router;
