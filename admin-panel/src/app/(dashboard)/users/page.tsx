@@ -11,7 +11,8 @@ import {
     ShieldCheck,
     User as UserIcon,
     HardHat,
-    Loader2
+    Loader2,
+    Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -38,6 +39,17 @@ export default function UsersPage() {
             toast.error('Failed to load users');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteUser = async (userId: string) => {
+        if (!confirm('Are you sure you want to delete this user? This will also delete all their bookings and notifications.')) return;
+        try {
+            await api.delete(`/users/${userId}`);
+            toast.success('User deleted successfully');
+            fetchUsers();
+        } catch (error) {
+            toast.error('Failed to delete user');
         }
     };
 
@@ -156,8 +168,13 @@ export default function UsersPage() {
                                                 })}
                                             </td>
                                             <td className="px-8 py-5 text-right">
-                                                <button className="p-2 text-slate-500 hover:text-white transition-all">
-                                                    <MoreVertical className="w-5 h-5" />
+                                                <button
+                                                    onClick={() => handleDeleteUser(user.id)}
+                                                    className="p-2 text-slate-500 hover:text-red-500 transition-all"
+                                                    disabled={user.role === 'ADMIN'}
+                                                    title={user.role === 'ADMIN' ? 'Cannot delete admin' : 'Delete user'}
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
                                                 </button>
                                             </td>
                                         </tr>
