@@ -43,6 +43,15 @@ export class UserService {
         return { data, total };
     }
 
+    static async deleteUser(userId: string) {
+        await prisma.$transaction([
+            prisma.booking.deleteMany({ where: { OR: [{ customerId: userId }, { providerId: userId }] } }),
+            prisma.notification.deleteMany({ where: { userId } }),
+            prisma.user.delete({ where: { id: userId } })
+        ]);
+        return { success: true };
+    }
+
     static async getProviders({ page, limit }: PaginationParams) {
         const skip = (page - 1) * limit;
 
