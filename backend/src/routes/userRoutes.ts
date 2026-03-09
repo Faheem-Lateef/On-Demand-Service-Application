@@ -1,5 +1,5 @@
 import express from 'express';
-import { getMe, getAllUsers, getProviders, getProviderBookings, getPendingProviders, approveProvider, rejectProvider } from '../controllers/userController';
+import { getMe, getAllUsers, getProviders, getProviderBookings, getPendingProviders, approveProvider, rejectProvider, deleteUser } from '../controllers/userController';
 import { protect, restrictTo } from '../middlewares/authMiddleware';
 
 const router = express.Router();
@@ -19,5 +19,6 @@ router.patch('/providers/:id/approve', restrictTo('ADMIN'), approveProvider);
 router.patch('/providers/:id/reject', restrictTo('ADMIN'), rejectProvider);
 
 router.get('/', restrictTo('ADMIN'), getAllUsers);
+router.delete('/:id', restrictTo('ADMIN'), deleteUser);
 
 export default router;
