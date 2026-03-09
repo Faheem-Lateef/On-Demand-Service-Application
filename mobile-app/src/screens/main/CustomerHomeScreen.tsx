@@ -16,7 +16,9 @@ const { width } = Dimensions.get('window');
 const CATEGORY_ICONS: Record<string, string> = {
     'Cleaning': '🧹',
     'Plumbing': '🔧',
+    'Electrical': '⚡',
     'Electrician': '⚡',
+    'AC Service': '❄️',
     'AC Repair': '❄️',
     'Painting': '🎨',
 };
