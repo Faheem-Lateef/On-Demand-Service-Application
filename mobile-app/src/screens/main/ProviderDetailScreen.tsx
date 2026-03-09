@@ -21,8 +21,17 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
                 // Fetch categories to find the services for this provider's category
                 const res = await api.get('/categories');
                 const category = res.data.data.find((c: any) => c.id === provider.categoryId);
-                if (category && category.services.length > 0) {
+
+                if (category && category.services && category.services.length > 0) {
                     bookingService = category.services[0];
+                } else if (category && category.name) {
+                    // Fallback: If category has no services, try to match by name pattern
+                    const allCategories = res.data.data;
+                    const fallbackCat = allCategories.find((c: any) =>
+                        c.name.toLowerCase().includes(category.name.toLowerCase().split(' ')[0]) &&
+                        c.services.length > 0
+                    );
+                    if (fallbackCat) bookingService = fallbackCat.services[0];
                 }
             } catch (error) {
                 console.error('Error fetching category services:', error);
@@ -30,7 +39,7 @@ export default function ProviderDetailScreen({ route, navigation }: any) {
         }
 
         if (!bookingService) {
-            alert('This provider has not listed any services yet.');
+            alert('This service category currently has no available booking options. Please contact administration.');
             return;
         }
 
