@@ -7,8 +7,6 @@ const adapter = new PrismaMariaDb(process.env.DATABASE_URL as string);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    console.log('Seed started...');
-
     // 1. Create Admin User
     const adminPassword = await bcrypt.hash('admin123', 10);
     const admin = await prisma.user.upsert({
@@ -21,7 +19,6 @@ async function main() {
             role: Role.ADMIN,
         },
     });
-    console.log('Admin user created:', admin.email);
 
     // 2. Create Categories and Services
     const categories = [
@@ -31,6 +28,7 @@ async function main() {
             services: [
                 { name: 'Deep Home Cleaning', description: 'Complete house scrub-down', price: 1500 },
                 { name: 'Sofa Cleaning', description: 'Expert upholstery cleaning', price: 800 },
+                { name: 'Office Cleaning', description: 'Monthly office maintenance', price: 3000 },
             ],
         },
         {
@@ -38,7 +36,34 @@ async function main() {
             description: 'Home appliance and hardware repairs',
             services: [
                 { name: 'AC Service', description: 'Routine AC maintenance', price: 1200 },
-                { name: 'Plumbing', description: 'Leaky pipes and fixture fixes', price: 500 },
+                { name: 'Washing Machine Repair', description: 'Fixing drum and motor issues', price: 1000 },
+                { name: 'Refrigerator Repair', description: 'Gas refill and compressor fixes', price: 1500 },
+            ],
+        },
+        {
+            name: 'Plumbing',
+            description: 'Residential and commercial plumbing solutions',
+            services: [
+                { name: 'Leaky Pipe Fix', description: 'Fixing minor leaks in faucets and pipes', price: 400 },
+                { name: 'Drainage Unclogging', description: 'Clearing blocked kitchen or bath drains', price: 600 },
+                { name: 'Bathroom Fitting', description: 'Installing new taps and shower heads', price: 1000 },
+            ],
+        },
+        {
+            name: 'Electrician',
+            description: 'Safe and certified electrical work',
+            services: [
+                { name: 'Fan Installation', description: 'Fitting and wiring ceiling fans', price: 500 },
+                { name: 'Custom Wiring', description: 'New socket points and internal wiring', price: 1500 },
+                { name: 'Switchboard Repair', description: 'Fixing faulty switches', price: 300 },
+            ],
+        },
+        {
+            name: 'Painting',
+            description: 'Interior and exterior home painting',
+            services: [
+                { name: 'Interior Wall Painting', description: 'Single wall or full room painting', price: 5000 },
+                { name: 'Wood Polishing', description: 'Restore furniture and doors', price: 2000 },
             ],
         },
     ];
@@ -62,7 +87,7 @@ async function main() {
         const dbServices = await prisma.service.findMany({ where: { categoryId: category.id } });
         dbServices.forEach(s => createdServices[s.name] = s.id);
 
-        console.log(`Category and services created: ${category.name}`);
+
     }
 
     // 3. Create Dummy Avatar Providers 
@@ -106,7 +131,6 @@ async function main() {
                 avatarUrl: p.avatarUrl,
             },
         });
-        console.log(`Provider created: ${provider.name}`);
 
         // Currently, our schema maps providers to services *through* bookings (history). 
         // We will seed mock historic bookings to permanently assign them to their specific services
@@ -127,8 +151,6 @@ async function main() {
             }
         }
     }
-
-    console.log('Seed finished successfully.');
 }
 
 main()
