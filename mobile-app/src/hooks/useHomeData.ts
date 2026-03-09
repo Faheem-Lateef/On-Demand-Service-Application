@@ -29,7 +29,10 @@ export function useHomeData() {
                 rating: 4.8, // Standardize to static or fetch from DB in future
                 image: getServiceImage(s.name)
             })));
-            setPopularServices(allServices.slice(0, 5));
+
+            // Randomize to show different things on home
+            const shuffled = [...allServices].sort(() => 0.5 - Math.random());
+            setPopularServices(shuffled.slice(0, 5));
 
             setProviders(providersRes.data.data);
         } catch {
