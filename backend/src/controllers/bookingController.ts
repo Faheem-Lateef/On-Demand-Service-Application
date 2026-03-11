@@ -71,3 +71,11 @@ export const rejectBooking = asyncHandler(async (req: AuthRequest, res: Response
     const updatedBooking = await BookingService.rejectBooking(req.params.id as string);
     res.status(200).json({ success: true, data: updatedBooking });
 });
+
+// @desc    Provider marks a job as completed
+// @route   PATCH /api/bookings/:id/complete
+// @access  Private (Provider only)
+export const completeBooking = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const updatedBooking = await BookingService.completeBooking(req.params.id as string, req.user!.id);
+    res.status(200).json({ success: true, data: updatedBooking });
+});

@@ -24,9 +24,8 @@ export interface Category {
     icon?: string;
 }
 
-// Representing the expanded provider payload from our backend /api/users/providers
 export interface Provider extends User {
-    avatarUrl?: string; // We'll add this to DB later per previous requests
+    avatarUrl?: string;
     rating?: number;
     jobsDone?: number;
     providerBookings?: Array<{

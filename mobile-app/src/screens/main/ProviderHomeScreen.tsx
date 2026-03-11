@@ -76,6 +76,26 @@ export default function ProviderHomeScreen({ navigation }: any) {
         ]);
     };
 
+    const handleComplete = async (bookingId: string) => {
+        Alert.alert('Complete Job?', 'Are you sure you want to mark this job as completed?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Complete', style: 'default', onPress: async () => {
+                    setActionLoading(bookingId);
+                    try {
+                        await api.patch(`/bookings/${bookingId}/complete`);
+                        Alert.alert('✅ Completed', 'Job marked as completed successfully.');
+                        fetchData();
+                    } catch (error: any) {
+                        Alert.alert('Error', error.response?.data?.message || 'Failed to complete booking.');
+                    } finally {
+                        setActionLoading(null);
+                    }
+                }
+            }
+        ]);
+    };
+
     const StatCard = ({ title, value, color }: any) => (
         <View style={styles.statCard}>
             <Text style={styles.statLabel}>{title}</Text>
@@ -94,6 +114,11 @@ export default function ProviderHomeScreen({ navigation }: any) {
 
     const pendingCount = bookings.filter(b => b.status === 'PENDING').length;
     const acceptedCount = bookings.filter(b => b.status === 'ACCEPTED').length;
+
+    const sortedBookings = [...bookings].sort((a, b) => {
+        const priority: Record<string, number> = { PENDING: 1, ACCEPTED: 2, COMPLETED: 3, REJECTED: 4 };
+        return (priority[a.status] || 5) - (priority[b.status] || 5);
+    });
 
     if (loading && !refreshing) {
         return (
@@ -159,8 +184,8 @@ export default function ProviderHomeScreen({ navigation }: any) {
                     </TouchableOpacity>
                 </View>
 
-                {bookings.length > 0 ? (
-                    bookings.slice(0, 5).map(item => {
+                {sortedBookings.length > 0 ? (
+                    sortedBookings.slice(0, 5).map(item => {
                         const scheduledDate = new Date(item.scheduledAt);
                         const colors = STATUS_COLORS[item.status] || STATUS_COLORS.PENDING;
                         const isActioning = actionLoading === item.id;
@@ -228,6 +253,21 @@ export default function ProviderHomeScreen({ navigation }: any) {
                                             {isActioning
                                                 ? <ActivityIndicator size="small" color="#fff" />
                                                 : <Text style={styles.acceptBtnText}>✓ Accept Job</Text>}
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+
+                                {/* Action Button — Mark Complete for ACCEPTED jobs */}
+                                {item.status === 'ACCEPTED' && scheduledDate <= new Date() && (
+                                    <View style={[styles.actionRow, { marginTop: 12 }]}>
+                                        <TouchableOpacity
+                                            style={[styles.acceptBtn, isActioning && { opacity: 0.5 }, { backgroundColor: '#10B981', flex: 1 }]}
+                                            onPress={() => handleComplete(item.id)}
+                                            disabled={!!actionLoading}
+                                        >
+                                            {isActioning
+                                                ? <ActivityIndicator size="small" color="#fff" />
+                                                : <Text style={styles.acceptBtnText}>✓ Mark as Completed</Text>}
                                         </TouchableOpacity>
                                     </View>
                                 )}
