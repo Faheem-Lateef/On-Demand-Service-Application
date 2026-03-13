@@ -15,12 +15,14 @@ const { width } = Dimensions.get('window');
 
 const CATEGORY_ICONS: Record<string, string> = {
     'Cleaning': '🧹',
+    'Repair': '🛠️',
     'Plumbing': '🔧',
     'Electrical': '⚡',
     'Electrician': '⚡',
     'AC Service': '❄️',
     'AC Repair': '❄️',
     'Painting': '🎨',
+    'Home Cleaning': '🏠',
 };
 
 export default function CustomerHomeScreen({ navigation }: any) {
